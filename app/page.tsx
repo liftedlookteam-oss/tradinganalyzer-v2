@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   UserButton,
   useUser,
-  useClerk,
 } from "@clerk/nextjs";
 
 type TimeframeKey = "daily" | "h4" | "h2" | "h1" | "m15";
@@ -81,7 +80,6 @@ const markets = [
 
 export default function Home() {
   const { isSignedIn } = useUser();
-  const { openSignIn, openSignUp } = useClerk();
 
   const [files, setFiles] = useState<UploadedFiles>({
     daily: null,
@@ -105,7 +103,7 @@ export default function Home() {
 
   async function handleAnalyze() {
     if (!isSignedIn) {
-      openSignIn();
+      window.location.href = "/sign-in";
       return;
     }
 
@@ -194,19 +192,19 @@ export default function Home() {
         <header className="mb-6 flex items-center justify-end">
           {!isSignedIn ? (
             <div className="flex gap-3">
-              <button
-                onClick={() => openSignIn()}
+              <a
+                href="/sign-in"
                 className="rounded-xl bg-white px-5 py-2 text-sm font-bold text-black transition hover:bg-zinc-200"
               >
                 Sign In
-              </button>
+              </a>
 
-              <button
-                onClick={() => openSignUp()}
+              <a
+                href="/sign-up"
                 className="rounded-xl border border-zinc-700 px-5 py-2 text-sm font-bold text-white transition hover:border-white"
               >
                 Sign Up
-              </button>
+              </a>
             </div>
           ) : (
             <UserButton />
