@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 
 type TimeframeKey = "daily" | "h4" | "h2" | "h1" | "m15" | "m5";
@@ -29,6 +29,15 @@ type Analysis = {
   scoreReason: string;
   finalDecision: string;
 };
+
+const loadingMessages = [
+  "Analyzing market structure...",
+  "Checking timeframe alignment...",
+  "Evaluating liquidity context...",
+  "Scanning bullish and bearish scenarios...",
+  "Comparing higher and lower timeframe bias...",
+  "Building final trade assessment...",
+];
 
 const timeframes: {
   key: TimeframeKey;
@@ -118,13 +127,26 @@ export default function Home() {
   });
 
   const [market, setMarket] = useState("Forex");
+
   const [tradeDuration, setTradeDuration] = useState(
     "Intraday: 30 minutes–4 hours"
   );
 
   const [loading, setLoading] = useState(false);
+  const [loadingIndex, setLoadingIndex] = useState(0);
+
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const interval = setInterval(() => {
+      setLoadingIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 1800);
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   function handleFileChange(key: TimeframeKey, file: File | null) {
     setFiles((prev) => ({
@@ -149,6 +171,7 @@ export default function Home() {
     }
 
     setLoading(true);
+    setLoadingIndex(0);
     setAnalysis(null);
 
     const formData = new FormData();
@@ -260,13 +283,11 @@ export default function Home() {
 
               <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-400">
                 Upload your chart screenshots by timeframe and choose how long
-                you plan to hold the trade. The analysis adapts to your trade
-                duration instead of giving a generic market overview.
+                you plan to hold the trade.
               </p>
 
               <p className="mt-4 text-sm text-zinc-500">
-                This tool does not provide blind buy or sell signals. It helps
-                structure market context, scenarios, invalidation and risk.
+                This tool does not provide blind buy or sell signals.
               </p>
             </div>
 
@@ -323,7 +344,7 @@ export default function Home() {
             </h2>
 
             <p className="mt-2 text-zinc-400">
-              This helps the AI prioritize the correct timeframes for your setup.
+              This helps the AI prioritize the correct timeframes.
             </p>
           </div>
 
@@ -374,11 +395,27 @@ export default function Home() {
           disabled={!canAnalyze || loading}
         >
           {loading
-            ? "Analyzing setup..."
+            ? loadingMessages[loadingIndex]
             : canAnalyze
             ? `Analyze ${market} Setup`
             : "Upload at least 2 timeframes to analyze"}
         </button>
+
+        {loading && (
+          <div className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+            <div className="flex items-center gap-4">
+              <div className="h-4 w-4 animate-pulse rounded-full bg-white" />
+
+              <p className="text-lg font-medium text-zinc-300">
+                {loadingMessages[loadingIndex]}
+              </p>
+            </div>
+
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-zinc-800">
+              <div className="h-full animate-pulse rounded-full bg-white w-1/2" />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
@@ -395,17 +432,10 @@ function ResultsView({
   tradeDuration: string;
   onNewAnalysis: () => void;
 }) {
-  const uploadedPreviews = timeframes
-    .map((timeframe) => ({
-      ...timeframe,
-      file: files[timeframe.key],
-    }))
-    .filter((item) => item.file);
-
   return (
     <main className="min-h-screen bg-[#050505] text-white px-6 py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
               Analysis Result
@@ -418,21 +448,11 @@ function ResultsView({
 
           <button
             onClick={onNewAnalysis}
-            className="w-fit rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+            className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
           >
             New Analysis
           </button>
         </div>
-
-        <section className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {uploadedPreviews.map((item) => (
-            <UploadedPreview
-              key={item.key}
-              title={item.title}
-              file={item.file as File}
-            />
-          ))}
-        </section>
 
         <section className="mb-6 grid gap-5 md:grid-cols-3">
           <TopMetric title="Overall Bias" value={analysis.overallBias} />
@@ -442,7 +462,6 @@ function ResultsView({
 
         <section className="mb-6 grid gap-6 lg:grid-cols-2">
           <SimpleCard title="Key Levels" value={analysis.keyLevels} />
-
           <SimpleCard
             title="Market Structure"
             value={analysis.marketStructure}
@@ -473,8 +492,7 @@ function ResultsView({
           </p>
 
           <p className="text-2xl font-bold leading-tight text-white">
-            {analysis.mostImportantThing ||
-              "No clear priority identified."}
+            {analysis.mostImportantThing}
           </p>
         </section>
 
@@ -484,7 +502,7 @@ function ResultsView({
           </p>
 
           <p className="text-2xl font-bold leading-tight text-white">
-            {analysis.finalDecision || "No final decision provided."}
+            {analysis.finalDecision}
           </p>
         </section>
       </div>
@@ -543,30 +561,6 @@ function UploadBox({
   );
 }
 
-function UploadedPreview({
-  title,
-  file,
-}: {
-  title: string;
-  file: File;
-}) {
-  const previewUrl = URL.createObjectURL(file);
-
-  return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-3">
-      <img
-        src={previewUrl}
-        alt={`${title} uploaded preview`}
-        className="h-28 w-full rounded-2xl object-cover"
-      />
-
-      <p className="mt-3 text-sm font-semibold text-zinc-300">
-        {title}
-      </p>
-    </div>
-  );
-}
-
 function TopMetric({
   title,
   value,
@@ -580,9 +574,7 @@ function TopMetric({
         {title}
       </p>
 
-      <p className="mt-3 text-2xl font-bold">
-        {value || "N/A"}
-      </p>
+      <p className="mt-3 text-2xl font-bold">{value}</p>
     </div>
   );
 }
@@ -599,7 +591,7 @@ function SimpleCard({
       <h2 className="text-2xl font-bold">{title}</h2>
 
       <p className="mt-4 text-zinc-300 leading-8 whitespace-pre-wrap">
-        {value || "N/A"}
+        {value}
       </p>
     </div>
   );
@@ -633,9 +625,7 @@ function ScenarioPanel({
           : "border-red-600/70 bg-red-900/35"
       }`}
     >
-      <h2 className="text-3xl font-bold">
-        {title}
-      </h2>
+      <h2 className="text-3xl font-bold">{title}</h2>
 
       <div className="mt-6 rounded-2xl bg-black/50 p-5">
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
@@ -643,7 +633,7 @@ function ScenarioPanel({
         </p>
 
         <p className="text-zinc-200 leading-8 whitespace-pre-wrap">
-          {scenario || "No scenario provided."}
+          {scenario}
         </p>
       </div>
 
@@ -653,15 +643,13 @@ function ScenarioPanel({
         </p>
 
         <p className="text-zinc-200 leading-8 whitespace-pre-wrap">
-          {conditions || "No conditions provided."}
+          {conditions}
         </p>
       </div>
 
       <div className="mt-6 rounded-2xl bg-black/60 p-5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="font-bold">
-            Probability Score
-          </p>
+          <p className="font-bold">Probability Score</p>
 
           <p className="text-2xl font-bold">
             {safeScore}/100
@@ -675,11 +663,6 @@ function ScenarioPanel({
               width: `${safeScore}%`,
             }}
           />
-        </div>
-
-        <div className="mt-2 flex justify-between text-xs text-zinc-500">
-          <span>Weak</span>
-          <span>Strong</span>
         </div>
       </div>
     </div>
