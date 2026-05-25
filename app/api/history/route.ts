@@ -11,7 +11,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("analyses")
-      .select("id, created_at, market, trade_duration, analysis")
+      .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -33,6 +33,66 @@ export async function GET() {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    const {
+      id,
+      trade_status,
+      trade_result,
+      risk_amount,
+      risk_percent,
+      emotion,
+      journal_notes,
+    } = body;
+
+    if (!id) {
+      return Response.json(
+        { error: "Missing analysis id." },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("analyses")
+      .update({
+        trade_status,
+        trade_result,
+        risk_amount,
+        risk_percent,
+        emotion,
+        journal_notes,
+      })
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) {
+      return Response.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to update journal." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { userId } = await auth();
@@ -45,7 +105,10 @@ export async function DELETE(request: Request) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return Response.json({ error: "Missing analysis id." }, { status: 400 });
+      return Response.json(
+        { error: "Missing analysis id." },
+        { status: 400 }
+      );
     }
 
     const { error } = await supabase
@@ -55,7 +118,10 @@ export async function DELETE(request: Request) {
       .eq("user_id", userId);
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+      return Response.json(
+        { error: error.message },
+        { status: 500 }
+      );
     }
 
     return Response.json({

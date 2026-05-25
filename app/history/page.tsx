@@ -8,6 +8,12 @@ type SavedAnalysis = {
   created_at: string;
   market: string;
   trade_duration: string;
+  trade_status?: string;
+  trade_result?: string;
+  risk_amount?: string;
+  risk_percent?: string;
+  emotion?: string;
+  journal_notes?: string;
   analysis: {
     overallBias?: string;
     tradeQuality?: string;
@@ -24,12 +30,17 @@ type SavedAnalysis = {
   };
 };
 
+const tradeStatuses = ["Not taken", "Planned", "Taken", "Skipped"];
+const tradeResults = ["Pending", "Win", "Loss", "Breakeven"];
+const emotions = ["Calm", "FOMO", "Impatient", "Revenge", "Confident", "Unclear"];
+
 export default function HistoryPage() {
   const { isSignedIn, isLoaded } = useUser();
 
   const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingJournal, setSavingJournal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -79,6 +90,10 @@ export default function HistoryPage() {
         const combined = [
           item.market,
           item.trade_duration,
+          item.trade_status,
+          item.trade_result,
+          item.emotion,
+          item.journal_notes,
           item.analysis.overallBias,
           item.analysis.tradeQuality,
           item.analysis.mostImportantThing,
@@ -98,9 +113,7 @@ export default function HistoryPage() {
           qualityFilter === "All" ||
           item.analysis.tradeQuality === qualityFilter;
 
-        return (
-          matchesSearch && matchesMarket && matchesBias && matchesQuality
-        );
+        return matchesSearch && matchesMarket && matchesBias && matchesQuality;
       })
       .sort((a, b) => {
         const aTime = new Date(a.created_at).getTime();
@@ -127,6 +140,56 @@ export default function HistoryPage() {
       setSelectedId(filteredAnalyses[0].id);
     }
   }, [filteredAnalyses, selectedId]);
+
+  function updateSelectedField(field: keyof SavedAnalysis, value: string) {
+    if (!selectedAnalysis) return;
+
+    setAnalyses((prev) =>
+      prev.map((item) =>
+        item.id === selectedAnalysis.id
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      )
+    );
+  }
+
+  async function saveJournal() {
+    if (!selectedAnalysis) return;
+
+    setSavingJournal(true);
+
+    try {
+      const response = await fetch("/api/history", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedAnalysis.id,
+          trade_status: selectedAnalysis.trade_status || "Not taken",
+          trade_result: selectedAnalysis.trade_result || "Pending",
+          risk_amount: selectedAnalysis.risk_amount || "",
+          risk_percent: selectedAnalysis.risk_percent || "",
+          emotion: selectedAnalysis.emotion || "",
+          journal_notes: selectedAnalysis.journal_notes || "",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        alert(data.error || "Failed to save journal.");
+        return;
+      }
+
+      alert("Journal saved.");
+    } finally {
+      setSavingJournal(false);
+    }
+  }
 
   async function deleteAnalysis(id: string) {
     const confirmed = confirm("Delete this saved analysis?");
@@ -171,7 +234,7 @@ export default function HistoryPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-zinc-500">
-              Search, filter and review your previous chart analyses.
+              Search, filter, review and journal your trading decisions.
             </p>
           </div>
 
@@ -275,6 +338,7 @@ export default function HistoryPage() {
               {filteredAnalyses.length === 0 ? (
                 <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
                   <p className="font-bold">No matches</p>
+
                   <p className="mt-2 text-sm text-zinc-500">
                     Try changing your filters or search term.
                   </p>
@@ -314,8 +378,8 @@ export default function HistoryPage() {
                         />
 
                         <SmallStat
-                          label="Quality"
-                          value={item.analysis.tradeQuality || "N/A"}
+                          label="Status"
+                          value={item.trade_status || "Not taken"}
                         />
                       </div>
 
@@ -369,6 +433,93 @@ export default function HistoryPage() {
                       </button>
                     </div>
                   </div>
+
+                  <section className="mb-6 rounded-3xl border border-zinc-800 bg-black p-6">
+                    <div className="mb-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                          Trade Decision Journal
+                        </p>
+
+                        <h3 className="mt-2 text-2xl font-bold">
+                          Execution Notes
+                        </h3>
+                      </div>
+
+                      <button
+                        onClick={saveJournal}
+                        disabled={savingJournal}
+                        className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-40"
+                      >
+                        {savingJournal ? "Saving..." : "Save Journal"}
+                      </button>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <JournalSelect
+                        label="Trade Status"
+                        value={selectedAnalysis.trade_status || "Not taken"}
+                        options={tradeStatuses}
+                        onChange={(value) =>
+                          updateSelectedField("trade_status", value)
+                        }
+                      />
+
+                      <JournalSelect
+                        label="Trade Result"
+                        value={selectedAnalysis.trade_result || "Pending"}
+                        options={tradeResults}
+                        onChange={(value) =>
+                          updateSelectedField("trade_result", value)
+                        }
+                      />
+
+                      <JournalSelect
+                        label="Emotion"
+                        value={selectedAnalysis.emotion || ""}
+                        options={["", ...emotions]}
+                        onChange={(value) =>
+                          updateSelectedField("emotion", value)
+                        }
+                      />
+
+                      <JournalInput
+                        label="Risk Amount"
+                        placeholder="Example: 50€"
+                        value={selectedAnalysis.risk_amount || ""}
+                        onChange={(value) =>
+                          updateSelectedField("risk_amount", value)
+                        }
+                      />
+
+                      <JournalInput
+                        label="Risk %"
+                        placeholder="Example: 1%"
+                        value={selectedAnalysis.risk_percent || ""}
+                        onChange={(value) =>
+                          updateSelectedField("risk_percent", value)
+                        }
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+                        Notes
+                      </label>
+
+                      <textarea
+                        value={selectedAnalysis.journal_notes || ""}
+                        onChange={(event) =>
+                          updateSelectedField(
+                            "journal_notes",
+                            event.target.value
+                          )
+                        }
+                        placeholder="Why did you take, skip, or plan this trade?"
+                        className="mt-2 min-h-32 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white"
+                      />
+                    </div>
+                  </section>
 
                   <div className="mb-6 grid gap-4 md:grid-cols-3">
                     <Metric
@@ -451,6 +602,65 @@ export default function HistoryPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function JournalSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+        {label}
+      </label>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white outline-none focus:border-white"
+      >
+        {options.map((item) => (
+          <option key={item || "none"} value={item}>
+            {item || "Select"}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function JournalInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+        {label}
+      </label>
+
+      <input
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white"
+      />
+    </div>
   );
 }
 
