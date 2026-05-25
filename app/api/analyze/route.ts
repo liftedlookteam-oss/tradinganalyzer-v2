@@ -73,12 +73,26 @@ Important rules:
 - The final decision must match the planned trade duration.
 - For scalps, do not reject the setup only because Daily/4H is mixed, unless higher timeframe shows immediate major resistance/support.
 - For swing/position trades, do not over-focus on 5M/15M noise.
+- The "mostImportantThing" must be the clearest single thing the trader should pay attention to right now.
+- It should be practical, direct and specific.
+- Examples:
+  - "Wait for a clean break and retest of the current range high."
+  - "Do not chase here; price is extended into resistance."
+  - "No clear edge until liquidity is swept and structure confirms."
+  - "The short-term setup is bullish, but only while 15M structure holds."
+
+Scoring rules:
+- Scores above 70 should be rare.
+- Only use 70+ when there is clean confluence across relevant timeframes.
+- If conditions are mixed, keep both scores moderate.
+- If the setup is unclear, tradeQuality must be "No Trade".
 
 Return ONLY valid JSON in this exact structure:
 
 {
   "overallBias": "Bullish | Bearish | Neutral | Unclear",
   "tradeQuality": "Bad | Moderate | Good | No Trade",
+  "mostImportantThing": "",
   "keyLevels": "",
   "marketStructure": "",
   "bullishScenario": "",
@@ -92,6 +106,7 @@ Return ONLY valid JSON in this exact structure:
 }
 
 Guidelines:
+- mostImportantThing: one clear sentence.
 - keyLevels: max 2-4 short bullet-style points.
 - marketStructure: max 2-3 clear sentences.
 - bullishScenario: explain the upside case based on the selected trade duration.
@@ -134,6 +149,7 @@ Guidelines:
       analysis = {
         overallBias: "Unclear",
         tradeQuality: "No Trade",
+        mostImportantThing: "The AI response could not be parsed clearly. Treat this as no trade.",
         keyLevels: "Could not parse structured key levels.",
         marketStructure: "The AI response could not be parsed into structured JSON.",
         bullishScenario: "",

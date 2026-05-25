@@ -17,6 +17,7 @@ type UploadedFiles = {
 type Analysis = {
   overallBias: string;
   tradeQuality: string;
+  mostImportantThing: string;
   keyLevels: string;
   marketStructure: string;
   bullishScenario: string;
@@ -117,7 +118,10 @@ export default function Home() {
   });
 
   const [market, setMarket] = useState("Forex");
-  const [tradeDuration, setTradeDuration] = useState("Intraday: 30 minutes–4 hours");
+  const [tradeDuration, setTradeDuration] = useState(
+    "Intraday: 30 minutes–4 hours"
+  );
+
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [showResults, setShowResults] = useState(false);
@@ -135,7 +139,9 @@ export default function Home() {
       return;
     }
 
-    const uploadedFiles = Object.entries(files).filter(([, file]) => file !== null);
+    const uploadedFiles = Object.entries(files).filter(
+      ([, file]) => file !== null
+    );
 
     if (uploadedFiles.length < 2) {
       alert("Upload at least 2 timeframe charts before analyzing.");
@@ -146,6 +152,7 @@ export default function Home() {
     setAnalysis(null);
 
     const formData = new FormData();
+
     formData.append("market", market);
     formData.append("tradeDuration", tradeDuration);
 
@@ -170,7 +177,11 @@ export default function Home() {
 
       setAnalysis(data.analysis);
       setShowResults(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (error) {
       alert("Analysis failed.");
     } finally {
@@ -191,7 +202,10 @@ export default function Home() {
       m5: null,
     });
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   const uploadedCount = Object.values(files).filter(Boolean).length;
@@ -245,13 +259,14 @@ export default function Home() {
               </h1>
 
               <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-400">
-                Upload your chart screenshots by timeframe and choose how long you plan to hold the trade.
-                The analysis adapts to your trade duration instead of giving a generic market overview.
+                Upload your chart screenshots by timeframe and choose how long
+                you plan to hold the trade. The analysis adapts to your trade
+                duration instead of giving a generic market overview.
               </p>
 
               <p className="mt-4 text-sm text-zinc-500">
-                This tool does not provide blind buy or sell signals. It helps structure market context,
-                scenarios, invalidation and risk.
+                This tool does not provide blind buy or sell signals. It helps
+                structure market context, scenarios, invalidation and risk.
               </p>
             </div>
 
@@ -268,10 +283,12 @@ export default function Home() {
         <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Upload Chart Screenshots</h2>
+              <h2 className="text-2xl font-bold">
+                Upload Chart Screenshots
+              </h2>
 
               <p className="mt-2 text-zinc-400">
-                Upload at least 2 timeframes to run the analysis. More uploads usually mean a higher-quality result.
+                Upload at least 2 timeframes to run the analysis.
               </p>
             </div>
 
@@ -301,9 +318,12 @@ export default function Home() {
 
         <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
           <div className="mb-5">
-            <h2 className="text-2xl font-bold">Planned Trade Duration</h2>
+            <h2 className="text-2xl font-bold">
+              Planned Trade Duration
+            </h2>
+
             <p className="mt-2 text-zinc-400">
-              This tells the AI whether to prioritize lower timeframes for scalping or higher timeframes for swing/position trades.
+              This helps the AI prioritize the correct timeframes for your setup.
             </p>
           </div>
 
@@ -319,7 +339,14 @@ export default function Home() {
                 }`}
               >
                 <p className="font-bold">{item.label}</p>
-                <p className={`mt-1 text-sm ${tradeDuration === item.value ? "text-zinc-700" : "text-zinc-500"}`}>
+
+                <p
+                  className={`mt-1 text-sm ${
+                    tradeDuration === item.value
+                      ? "text-zinc-700"
+                      : "text-zinc-500"
+                  }`}
+                >
                   {item.description}
                 </p>
               </button>
@@ -334,7 +361,9 @@ export default function Home() {
               title={timeframe.title}
               description={timeframe.description}
               file={files[timeframe.key]}
-              onChange={(file) => handleFileChange(timeframe.key, file)}
+              onChange={(file) =>
+                handleFileChange(timeframe.key, file)
+              }
             />
           ))}
         </section>
@@ -347,8 +376,8 @@ export default function Home() {
           {loading
             ? "Analyzing setup..."
             : canAnalyze
-              ? `Analyze ${market} Setup`
-              : "Upload at least 2 timeframes to analyze"}
+            ? `Analyze ${market} Setup`
+            : "Upload at least 2 timeframes to analyze"}
         </button>
       </div>
     </main>
@@ -382,7 +411,9 @@ function ResultsView({
               Analysis Result
             </p>
 
-            <h1 className="text-4xl font-bold">Trade Decision Dashboard</h1>
+            <h1 className="text-4xl font-bold">
+              Trade Decision Dashboard
+            </h1>
           </div>
 
           <button
@@ -409,9 +440,24 @@ function ResultsView({
           <TopMetric title="Trade Duration" value={tradeDuration} />
         </section>
 
+        <section className="mb-6 rounded-3xl border border-yellow-500/40 bg-yellow-500/10 p-7">
+          <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-yellow-300">
+            Most Important Thing Right Now
+          </p>
+
+          <p className="text-2xl font-bold leading-tight text-white">
+            {analysis.mostImportantThing ||
+              "No clear priority identified."}
+          </p>
+        </section>
+
         <section className="mb-6 grid gap-6 lg:grid-cols-2">
           <SimpleCard title="Key Levels" value={analysis.keyLevels} />
-          <SimpleCard title="Market Structure" value={analysis.marketStructure} />
+
+          <SimpleCard
+            title="Market Structure"
+            value={analysis.marketStructure}
+          />
         </section>
 
         <section className="mb-6 grid gap-6 lg:grid-cols-2">
@@ -465,7 +511,9 @@ function UploadBox({
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
+        onChange={(e) =>
+          onChange(e.target.files?.[0] || null)
+        }
       />
 
       <div>
@@ -483,7 +531,9 @@ function UploadBox({
 
         <h3 className="text-xl font-bold">{title}</h3>
 
-        <p className="mt-3 text-sm leading-6 text-zinc-500">{description}</p>
+        <p className="mt-3 text-sm leading-6 text-zinc-500">
+          {description}
+        </p>
       </div>
 
       <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-sm text-zinc-500">
@@ -493,7 +543,13 @@ function UploadBox({
   );
 }
 
-function UploadedPreview({ title, file }: { title: string; file: File }) {
+function UploadedPreview({
+  title,
+  file,
+}: {
+  title: string;
+  file: File;
+}) {
   const previewUrl = URL.createObjectURL(file);
 
   return (
@@ -504,24 +560,40 @@ function UploadedPreview({ title, file }: { title: string; file: File }) {
         className="h-28 w-full rounded-2xl object-cover"
       />
 
-      <p className="mt-3 text-sm font-semibold text-zinc-300">{title}</p>
+      <p className="mt-3 text-sm font-semibold text-zinc-300">
+        {title}
+      </p>
     </div>
   );
 }
 
-function TopMetric({ title, value }: { title: string; value: string }) {
+function TopMetric({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
       <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
         {title}
       </p>
 
-      <p className="mt-3 text-2xl font-bold">{value || "N/A"}</p>
+      <p className="mt-3 text-2xl font-bold">
+        {value || "N/A"}
+      </p>
     </div>
   );
 }
 
-function SimpleCard({ title, value }: { title: string; value: string }) {
+function SimpleCard({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
       <h2 className="text-2xl font-bold">{title}</h2>
@@ -546,7 +618,11 @@ function ScenarioPanel({
   conditions: string;
   score: number;
 }) {
-  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+  const safeScore = Math.max(
+    0,
+    Math.min(100, Number(score) || 0)
+  );
+
   const isBullish = type === "bullish";
 
   return (
@@ -557,7 +633,9 @@ function ScenarioPanel({
           : "border-red-600/70 bg-red-900/35"
       }`}
     >
-      <h2 className="text-3xl font-bold">{title}</h2>
+      <h2 className="text-3xl font-bold">
+        {title}
+      </h2>
 
       <div className="mt-6 rounded-2xl bg-black/50 p-5">
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
@@ -581,15 +659,21 @@ function ScenarioPanel({
 
       <div className="mt-6 rounded-2xl bg-black/60 p-5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="font-bold">Probability Score</p>
+          <p className="font-bold">
+            Probability Score
+          </p>
 
-          <p className="text-2xl font-bold">{safeScore}/100</p>
+          <p className="text-2xl font-bold">
+            {safeScore}/100
+          </p>
         </div>
 
         <div className="relative h-4 rounded-full bg-zinc-800">
           <div
             className="absolute left-0 top-0 h-4 rounded-full bg-white"
-            style={{ width: `${safeScore}%` }}
+            style={{
+              width: `${safeScore}%`,
+            }}
           />
         </div>
 
