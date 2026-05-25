@@ -37,8 +37,7 @@ function cleanAnalysis(rawAnalysis: any) {
     overallBias: rawAnalysis?.overallBias || "Unclear",
     tradeQuality: rawAnalysis?.tradeQuality || "No Trade",
     mostImportantThing:
-      rawAnalysis?.mostImportantThing ||
-      "No clear priority identified.",
+      rawAnalysis?.mostImportantThing || "No clear priority identified.",
     keyLevels: rawAnalysis?.keyLevels || "No clear levels identified.",
     marketStructure:
       rawAnalysis?.marketStructure || "Market structure is unclear.",
@@ -225,12 +224,22 @@ Field rules:
 
     const analysis = cleanAnalysis(parsedAnalysis);
 
-    const { error: insertError } = await supabase.from("analyses").insert({
-      user_id: userId,
-      market,
-      trade_duration: tradeDuration,
-      analysis,
-    });
+    const { data: insertedAnalysis, error: insertError } = await supabase
+      .from("analyses")
+      .insert({
+        user_id: userId,
+        market,
+        trade_duration: tradeDuration,
+        analysis,
+        trade_status: "Not taken",
+        trade_result: "Pending",
+        risk_amount: "",
+        risk_percent: "",
+        emotion: "",
+        journal_notes: "",
+      })
+      .select("id")
+      .single();
 
     if (insertError) {
       console.error("SUPABASE_INSERT_ERROR:", insertError);
@@ -246,6 +255,7 @@ Field rules:
 
     return Response.json({
       success: true,
+      analysisId: insertedAnalysis?.id,
       analysis,
     });
   } catch (error) {
