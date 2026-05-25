@@ -47,32 +47,38 @@ const timeframes: {
   {
     key: "daily",
     title: "Daily Chart",
-    description: "Best for macro trend, major structure and higher-timeframe bias.",
+    description:
+      "Best for macro trend, major structure and higher-timeframe bias.",
   },
   {
     key: "h4",
     title: "4H Chart",
-    description: "Useful for swing structure, major zones and larger liquidity areas.",
+    description:
+      "Useful for swing structure, major zones and larger liquidity areas.",
   },
   {
     key: "h2",
     title: "2H Chart",
-    description: "Helps refine higher-timeframe context before intraday decisions.",
+    description:
+      "Helps refine higher-timeframe context before intraday decisions.",
   },
   {
     key: "h1",
     title: "1H Chart",
-    description: "Good for intraday structure, pullbacks and confirmation zones.",
+    description:
+      "Good for intraday structure, pullbacks and confirmation zones.",
   },
   {
     key: "m15",
     title: "15M Chart",
-    description: "Useful for short-term structure, liquidity and timing.",
+    description:
+      "Useful for short-term structure, liquidity and timing.",
   },
   {
     key: "m5",
     title: "5M Chart",
-    description: "Best for scalping, execution timing and very short-term setups.",
+    description:
+      "Best for scalping, execution timing and very short-term setups.",
   },
 ];
 
@@ -246,9 +252,18 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6 flex items-center justify-end">
+        <header className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <a
+              href="/history"
+              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+            >
+              History
+            </a>
+          </div>
+
           {!isSignedIn ? (
             <div className="flex gap-3">
               <a
@@ -412,7 +427,7 @@ export default function Home() {
             </div>
 
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-zinc-800">
-              <div className="h-full animate-pulse rounded-full bg-white w-1/2" />
+              <div className="h-full w-1/2 animate-pulse rounded-full bg-white" />
             </div>
           </div>
         )}
@@ -423,7 +438,6 @@ export default function Home() {
 
 function ResultsView({
   analysis,
-  files,
   tradeDuration,
   onNewAnalysis,
 }: {
@@ -433,7 +447,7 @@ function ResultsView({
   onNewAnalysis: () => void;
 }) {
   return (
-    <main className="min-h-screen bg-[#050505] text-white px-6 py-8">
+    <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -446,12 +460,21 @@ function ResultsView({
             </h1>
           </div>
 
-          <button
-            onClick={onNewAnalysis}
-            className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-          >
-            New Analysis
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href="/history"
+              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+            >
+              History
+            </a>
+
+            <button
+              onClick={onNewAnalysis}
+              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+            >
+              New Analysis
+            </button>
+          </div>
         </div>
 
         <section className="mb-6 grid gap-5 md:grid-cols-3">
@@ -462,6 +485,7 @@ function ResultsView({
 
         <section className="mb-6 grid gap-6 lg:grid-cols-2">
           <SimpleCard title="Key Levels" value={analysis.keyLevels} />
+
           <SimpleCard
             title="Market Structure"
             value={analysis.marketStructure}
@@ -590,7 +614,7 @@ function SimpleCard({
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
       <h2 className="text-2xl font-bold">{title}</h2>
 
-      <p className="mt-4 text-zinc-300 leading-8 whitespace-pre-wrap">
+      <p className="mt-4 whitespace-pre-wrap leading-8 text-zinc-300">
         {value}
       </p>
     </div>
@@ -632,7 +656,7 @@ function ScenarioPanel({
           Scenario
         </p>
 
-        <p className="text-zinc-200 leading-8 whitespace-pre-wrap">
+        <p className="whitespace-pre-wrap leading-8 text-zinc-200">
           {scenario}
         </p>
       </div>
@@ -642,7 +666,7 @@ function ScenarioPanel({
           What must happen
         </p>
 
-        <p className="text-zinc-200 leading-8 whitespace-pre-wrap">
+        <p className="whitespace-pre-wrap leading-8 text-zinc-200">
           {conditions}
         </p>
       </div>
