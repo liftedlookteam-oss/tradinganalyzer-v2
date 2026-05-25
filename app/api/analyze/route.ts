@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { auth } from "@clerk/nextjs/server";
+import { supabase } from "@/lib/supabase";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,6 +17,15 @@ const timeframeLabels: Record<string, string> = {
 
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json(
+        { error: "Unauthorized." },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
 
     const market = formData.get("market") as string;
@@ -28,6 +39,7 @@ export async function POST(request: Request) {
       if (image && image.size > 0) {
         const bytes = await image.arrayBuffer();
         const buffer = Buffer.from(bytes);
+
         const base64Image = buffer.toString("base64");
 
         imageInputs.push({
@@ -57,41 +69,26 @@ The user uploaded multiple chart screenshots from different timeframes.
 Analyze them as a multi-timeframe setup, but prioritize the analysis according to the planned holding period.
 
 Timeframe priority rules:
-- If planned duration is Scalp: prioritize 5M, 15M and 1H. Do not over-weight Daily or 4H unless they show a major obstacle nearby.
+- If planned duration is Scalp: prioritize 5M, 15M and 1H.
 - If planned duration is Intraday: prioritize 15M, 1H and 4H.
 - If planned duration is Session trade: prioritize 15M, 1H, 2H and 4H.
-- If planned duration is Swing: prioritize 4H and Daily, then use 1H/15M only for timing.
-- If planned duration is Position: prioritize Daily and 4H. Lower timeframes are secondary noise unless they show execution timing.
+- If planned duration is Swing: prioritize 4H and Daily.
+- If planned duration is Position: prioritize Daily and 4H.
 
 Important rules:
 - Do NOT give direct buy/sell signals.
 - Do NOT pretend certainty.
 - If the setup is unclear, say No Trade.
-- Keep every answer short, specific and easy to understand.
+- Keep every answer short, specific and practical.
 - Avoid generic textbook language.
-- Do not invent exact price levels unless they are clearly visible.
-- The final decision must match the planned trade duration.
-- For scalps, do not reject the setup only because Daily/4H is mixed, unless higher timeframe shows immediate major resistance/support.
-- For swing/position trades, do not over-focus on 5M/15M noise.
-- The "mostImportantThing" must be the clearest single thing the trader should pay attention to right now.
-- It should be practical, direct and specific.
-- Examples:
-  - "Wait for a clean break and retest of the current range high."
-  - "Do not chase here; price is extended into resistance."
-  - "No clear edge until liquidity is swept and structure confirms."
-  - "The short-term setup is bullish, but only while 15M structure holds."
-
-Scoring rules:
 - Scores above 70 should be rare.
-- Only use 70+ when there is clean confluence across relevant timeframes.
-- If conditions are mixed, keep both scores moderate.
-- If the setup is unclear, tradeQuality must be "No Trade".
+- If conditions are mixed, scores should stay moderate.
 
 Return ONLY valid JSON in this exact structure:
 
 {
-  "overallBias": "Bullish | Bearish | Neutral | Unclear",
-  "tradeQuality": "Bad | Moderate | Good | No Trade",
+  "overallBias": "",
+  "tradeQuality": "",
   "mostImportantThing": "",
   "keyLevels": "",
   "marketStructure": "",
@@ -104,17 +101,6 @@ Return ONLY valid JSON in this exact structure:
   "scoreReason": "",
   "finalDecision": ""
 }
-
-Guidelines:
-- mostImportantThing: one clear sentence.
-- keyLevels: max 2-4 short bullet-style points.
-- marketStructure: max 2-3 clear sentences.
-- bullishScenario: explain the upside case based on the selected trade duration.
-- bullishConditions: explain exactly what must happen for bullish scenario to be valid.
-- bearishScenario: explain the downside case based on the selected trade duration.
-- bearishConditions: explain exactly what must happen for bearish scenario to be valid.
-- bullishScore and bearishScore must be numbers from 0 to 100.
-- finalDecision must be strict: trade, wait, or no trade.
 `,
       },
     ];
@@ -149,19 +135,27 @@ Guidelines:
       analysis = {
         overallBias: "Unclear",
         tradeQuality: "No Trade",
-        mostImportantThing: "The AI response could not be parsed clearly. Treat this as no trade.",
-        keyLevels: "Could not parse structured key levels.",
-        marketStructure: "The AI response could not be parsed into structured JSON.",
+        mostImportantThing:
+          "The AI response could not be parsed clearly.",
+        keyLevels: "",
+        marketStructure: "",
         bullishScenario: "",
         bullishConditions: "",
         bearishScenario: "",
         bearishConditions: "",
         bullishScore: 0,
         bearishScore: 0,
-        scoreReason: "The response was not valid JSON.",
-        finalDecision: response.output_text,
+        scoreReason: "",
+        finalDecision: "No trade.",
       };
     }
+
+    await supabase.from("analyses").insert({
+      user_id: userId,
+      market,
+      trade_duration: tradeDuration,
+      analysis,
+    });
 
     return Response.json({
       success: true,
