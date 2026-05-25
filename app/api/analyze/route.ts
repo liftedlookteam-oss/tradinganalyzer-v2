@@ -20,10 +20,7 @@ export async function POST(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return Response.json(
-        { error: "Unauthorized." },
-        { status: 401 }
-      );
+      return Response.json({ error: "Unauthorized." }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -39,7 +36,6 @@ export async function POST(request: Request) {
       if (image && image.size > 0) {
         const bytes = await image.arrayBuffer();
         const buffer = Buffer.from(bytes);
-
         const base64Image = buffer.toString("base64");
 
         imageInputs.push({
@@ -65,26 +61,9 @@ You are a professional trading decision-support assistant.
 Market type: ${market}
 Planned trade duration: ${tradeDuration}
 
-The user uploaded multiple chart screenshots from different timeframes.
-Analyze them as a multi-timeframe setup, but prioritize the analysis according to the planned holding period.
+Analyze the uploaded chart screenshots as a multi-timeframe setup.
 
-Timeframe priority rules:
-- If planned duration is Scalp: prioritize 5M, 15M and 1H.
-- If planned duration is Intraday: prioritize 15M, 1H and 4H.
-- If planned duration is Session trade: prioritize 15M, 1H, 2H and 4H.
-- If planned duration is Swing: prioritize 4H and Daily.
-- If planned duration is Position: prioritize Daily and 4H.
-
-Important rules:
-- Do NOT give direct buy/sell signals.
-- Do NOT pretend certainty.
-- If the setup is unclear, say No Trade.
-- Keep every answer short, specific and practical.
-- Avoid generic textbook language.
-- Scores above 70 should be rare.
-- If conditions are mixed, scores should stay moderate.
-
-Return ONLY valid JSON in this exact structure:
+Return ONLY valid JSON:
 
 {
   "overallBias": "",
@@ -135,8 +114,7 @@ Return ONLY valid JSON in this exact structure:
       analysis = {
         overallBias: "Unclear",
         tradeQuality: "No Trade",
-        mostImportantThing:
-          "The AI response could not be parsed clearly.",
+        mostImportantThing: "The AI response could not be parsed clearly.",
         keyLevels: "",
         marketStructure: "",
         bullishScenario: "",
@@ -150,22 +128,37 @@ Return ONLY valid JSON in this exact structure:
       };
     }
 
-    await supabase.from("analyses").insert({
+    const { error: insertError } = await supabase.from("analyses").insert({
       user_id: userId,
       market,
       trade_duration: tradeDuration,
       analysis,
     });
 
+    if (insertError) {
+      console.error("SUPABASE_INSERT_ERROR:", insertError);
+
+      return Response.json(
+        {
+          error: "Analysis was created, but saving to history failed.",
+          supabaseError: insertError.message,
+        },
+        { status: 500 }
+      );
+    }
+
     return Response.json({
       success: true,
       analysis,
     });
   } catch (error) {
-    console.error(error);
+    console.error("ANALYZE_ROUTE_ERROR:", error);
 
     return Response.json(
-      { error: "AI analysis failed." },
+      {
+        error: "AI analysis failed.",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
