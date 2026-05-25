@@ -440,17 +440,6 @@ function ResultsView({
           <TopMetric title="Trade Duration" value={tradeDuration} />
         </section>
 
-        <section className="mb-6 rounded-3xl border border-yellow-500/40 bg-yellow-500/10 p-7">
-          <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-yellow-300">
-            Most Important Thing Right Now
-          </p>
-
-          <p className="text-2xl font-bold leading-tight text-white">
-            {analysis.mostImportantThing ||
-              "No clear priority identified."}
-          </p>
-        </section>
-
         <section className="mb-6 grid gap-6 lg:grid-cols-2">
           <SimpleCard title="Key Levels" value={analysis.keyLevels} />
 
@@ -476,6 +465,17 @@ function ResultsView({
             conditions={analysis.bearishConditions}
             score={analysis.bearishScore}
           />
+        </section>
+
+        <section className="mb-6 rounded-3xl border border-yellow-500/40 bg-yellow-500/10 p-7">
+          <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-yellow-300">
+            Most Important Thing Right Now
+          </p>
+
+          <p className="text-2xl font-bold leading-tight text-white">
+            {analysis.mostImportantThing ||
+              "No clear priority identified."}
+          </p>
         </section>
 
         <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
