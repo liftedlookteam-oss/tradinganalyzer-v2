@@ -32,6 +32,12 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
+  const [search, setSearch] = useState("");
+  const [marketFilter, setMarketFilter] = useState("All");
+  const [biasFilter, setBiasFilter] = useState("All");
+  const [qualityFilter, setQualityFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -61,10 +67,66 @@ export default function HistoryPage() {
     loadHistory();
   }, [isLoaded, isSignedIn]);
 
+  const markets = useMemo(() => {
+    return ["All", ...Array.from(new Set(analyses.map((item) => item.market)))];
+  }, [analyses]);
+
+  const filteredAnalyses = useMemo(() => {
+    const query = search.toLowerCase().trim();
+
+    return analyses
+      .filter((item) => {
+        const combined = [
+          item.market,
+          item.trade_duration,
+          item.analysis.overallBias,
+          item.analysis.tradeQuality,
+          item.analysis.mostImportantThing,
+          item.analysis.finalDecision,
+          item.analysis.keyLevels,
+          item.analysis.marketStructure,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const matchesSearch = !query || combined.includes(query);
+        const matchesMarket =
+          marketFilter === "All" || item.market === marketFilter;
+        const matchesBias =
+          biasFilter === "All" || item.analysis.overallBias === biasFilter;
+        const matchesQuality =
+          qualityFilter === "All" ||
+          item.analysis.tradeQuality === qualityFilter;
+
+        return (
+          matchesSearch && matchesMarket && matchesBias && matchesQuality
+        );
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.created_at).getTime();
+        const bTime = new Date(b.created_at).getTime();
+
+        return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+      });
+  }, [analyses, search, marketFilter, biasFilter, qualityFilter, sortOrder]);
+
   const selectedAnalysis = useMemo(
-    () => analyses.find((item) => item.id === selectedId) || null,
-    [analyses, selectedId]
+    () => filteredAnalyses.find((item) => item.id === selectedId) || null,
+    [filteredAnalyses, selectedId]
   );
+
+  useEffect(() => {
+    if (filteredAnalyses.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+
+    const stillExists = filteredAnalyses.some((item) => item.id === selectedId);
+
+    if (!stillExists) {
+      setSelectedId(filteredAnalyses[0].id);
+    }
+  }, [filteredAnalyses, selectedId]);
 
   async function deleteAnalysis(id: string) {
     const confirmed = confirm("Delete this saved analysis?");
@@ -109,7 +171,7 @@ export default function HistoryPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-zinc-500">
-              Review previous chart analyses, compare decisions, and track your trading context over time.
+              Search, filter and review your previous chart analyses.
             </p>
           </div>
 
@@ -140,7 +202,7 @@ export default function HistoryPage() {
             buttonHref="/"
           />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[390px_1fr]">
+          <div className="grid gap-6 lg:grid-cols-[410px_1fr]">
             <aside className="space-y-4">
               <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
                 <div className="flex items-center justify-between">
@@ -149,60 +211,122 @@ export default function HistoryPage() {
                   </p>
 
                   <p className="rounded-full bg-black px-3 py-1 text-xs font-bold text-zinc-400">
-                    {analyses.length}
+                    {filteredAnalyses.length}/{analyses.length}
                   </p>
                 </div>
 
-                <p className="mt-2 text-sm text-zinc-500">
-                  Only your own analyses are shown here.
-                </p>
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search analyses..."
+                  className="mt-4 w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white"
+                />
+
+                <div className="mt-4 grid gap-3">
+                  <select
+                    value={marketFilter}
+                    onChange={(event) => setMarketFilter(event.target.value)}
+                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
+                  >
+                    {markets.map((market) => (
+                      <option key={market} value={market}>
+                        Market: {market}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={biasFilter}
+                    onChange={(event) => setBiasFilter(event.target.value)}
+                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
+                  >
+                    <option value="All">Bias: All</option>
+                    <option value="Bullish">Bias: Bullish</option>
+                    <option value="Bearish">Bias: Bearish</option>
+                    <option value="Neutral">Bias: Neutral</option>
+                    <option value="Unclear">Bias: Unclear</option>
+                  </select>
+
+                  <select
+                    value={qualityFilter}
+                    onChange={(event) => setQualityFilter(event.target.value)}
+                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
+                  >
+                    <option value="All">Quality: All</option>
+                    <option value="Good">Quality: Good</option>
+                    <option value="Moderate">Quality: Moderate</option>
+                    <option value="Bad">Quality: Bad</option>
+                    <option value="No Trade">Quality: No Trade</option>
+                  </select>
+
+                  <select
+                    value={sortOrder}
+                    onChange={(event) =>
+                      setSortOrder(event.target.value as "newest" | "oldest")
+                    }
+                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
+                  >
+                    <option value="newest">Sort: Newest first</option>
+                    <option value="oldest">Sort: Oldest first</option>
+                  </select>
+                </div>
               </div>
 
-              {analyses.map((item) => {
-                const isSelected = selectedId === item.id;
+              {filteredAnalyses.length === 0 ? (
+                <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+                  <p className="font-bold">No matches</p>
+                  <p className="mt-2 text-sm text-zinc-500">
+                    Try changing your filters or search term.
+                  </p>
+                </div>
+              ) : (
+                filteredAnalyses.map((item) => {
+                  const isSelected = selectedId === item.id;
 
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setSelectedId(item.id)}
-                    className={`w-full rounded-3xl border p-5 text-left transition ${
-                      isSelected
-                        ? "border-white bg-zinc-900"
-                        : "border-zinc-800 bg-zinc-950 hover:border-zinc-600"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-bold">{item.market}</p>
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedId(item.id)}
+                      className={`w-full rounded-3xl border p-5 text-left transition ${
+                        isSelected
+                          ? "border-white bg-zinc-900"
+                          : "border-zinc-800 bg-zinc-950 hover:border-zinc-600"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-lg font-bold">{item.market}</p>
 
-                        <p className="mt-1 text-sm text-zinc-500">
-                          {item.trade_duration}
+                          <p className="mt-1 text-sm text-zinc-500">
+                            {item.trade_duration}
+                          </p>
+                        </div>
+
+                        <p className="text-xs text-zinc-500">
+                          {formatDate(item.created_at)}
                         </p>
                       </div>
 
-                      <p className="text-xs text-zinc-500">
-                        {formatDate(item.created_at)}
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <SmallStat
+                          label="Bias"
+                          value={item.analysis.overallBias || "N/A"}
+                        />
+
+                        <SmallStat
+                          label="Quality"
+                          value={item.analysis.tradeQuality || "N/A"}
+                        />
+                      </div>
+
+                      <p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-500">
+                        {item.analysis.mostImportantThing ||
+                          "No summary saved."}
                       </p>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <SmallStat
-                        label="Bias"
-                        value={item.analysis.overallBias || "N/A"}
-                      />
-
-                      <SmallStat
-                        label="Quality"
-                        value={item.analysis.tradeQuality || "N/A"}
-                      />
-                    </div>
-
-                    <p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-500">
-                      {item.analysis.mostImportantThing || "No summary saved."}
-                    </p>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })
+              )}
             </aside>
 
             <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
@@ -281,7 +405,9 @@ export default function HistoryPage() {
 
                     <DetailCard
                       title="Market Structure"
-                      value={selectedAnalysis.analysis.marketStructure || "N/A"}
+                      value={
+                        selectedAnalysis.analysis.marketStructure || "N/A"
+                      }
                     />
                   </div>
 
@@ -289,7 +415,9 @@ export default function HistoryPage() {
                     <ScenarioCard
                       variant="bullish"
                       title="Bullish Scenario"
-                      scenario={selectedAnalysis.analysis.bullishScenario || "N/A"}
+                      scenario={
+                        selectedAnalysis.analysis.bullishScenario || "N/A"
+                      }
                       conditions={
                         selectedAnalysis.analysis.bullishConditions || "N/A"
                       }
@@ -299,7 +427,9 @@ export default function HistoryPage() {
                     <ScenarioCard
                       variant="bearish"
                       title="Bearish Scenario"
-                      scenario={selectedAnalysis.analysis.bearishScenario || "N/A"}
+                      scenario={
+                        selectedAnalysis.analysis.bearishScenario || "N/A"
+                      }
                       conditions={
                         selectedAnalysis.analysis.bearishConditions || "N/A"
                       }
