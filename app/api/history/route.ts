@@ -32,3 +32,41 @@ export async function GET() {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return Response.json({ error: "Missing analysis id." }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("analyses")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+
+    return Response.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to delete analysis." },
+      { status: 500 }
+    );
+  }
+}

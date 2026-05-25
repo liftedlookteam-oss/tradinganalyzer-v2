@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 
 type SavedAnalysis = {
@@ -30,6 +30,7 @@ export default function HistoryPage() {
   const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -45,7 +46,12 @@ export default function HistoryPage() {
         const data = await response.json();
 
         if (data.success) {
-          setAnalyses(data.analyses || []);
+          const saved = data.analyses || [];
+          setAnalyses(saved);
+
+          if (saved.length > 0) {
+            setSelectedId(saved[0].id);
+          }
         }
       } finally {
         setLoading(false);
@@ -55,7 +61,39 @@ export default function HistoryPage() {
     loadHistory();
   }, [isLoaded, isSignedIn]);
 
-  const selectedAnalysis = analyses.find((item) => item.id === selectedId);
+  const selectedAnalysis = useMemo(
+    () => analyses.find((item) => item.id === selectedId) || null,
+    [analyses, selectedId]
+  );
+
+  async function deleteAnalysis(id: string) {
+    const confirmed = confirm("Delete this saved analysis?");
+    if (!confirmed) return;
+
+    setDeleting(true);
+
+    try {
+      const response = await fetch(`/api/history?id=${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        alert(data.error || "Failed to delete analysis.");
+        return;
+      }
+
+      const updated = analyses.filter((item) => item.id !== id);
+      setAnalyses(updated);
+
+      if (selectedId === id) {
+        setSelectedId(updated[0]?.id || null);
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
@@ -66,13 +104,19 @@ export default function HistoryPage() {
               Saved Setups
             </p>
 
-            <h1 className="text-4xl font-bold">Analysis History</h1>
+            <h1 className="text-4xl font-bold tracking-tight">
+              Analysis History
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-zinc-500">
+              Review previous chart analyses, compare decisions, and track your trading context over time.
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
             <a
               href="/"
-              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
             >
               New Analysis
             </a>
@@ -82,27 +126,38 @@ export default function HistoryPage() {
         </header>
 
         {loading ? (
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
-            <p className="text-zinc-400">Loading history...</p>
-          </div>
+          <EmptyState
+            title="Loading history..."
+            text="Fetching your saved analyses."
+            buttonLabel=""
+            buttonHref=""
+          />
         ) : analyses.length === 0 ? (
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
-            <h2 className="text-2xl font-bold">No saved analyses yet</h2>
-
-            <p className="mt-3 text-zinc-400">
-              Run your first chart analysis and it will appear here.
-            </p>
-
-            <a
-              href="/"
-              className="mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
-            >
-              Start Analysis
-            </a>
-          </div>
+          <EmptyState
+            title="No saved analyses yet"
+            text="Run your first chart analysis and it will appear here."
+            buttonLabel="Start Analysis"
+            buttonHref="/"
+          />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-            <section className="space-y-4">
+          <div className="grid gap-6 lg:grid-cols-[390px_1fr]">
+            <aside className="space-y-4">
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                    Saved
+                  </p>
+
+                  <p className="rounded-full bg-black px-3 py-1 text-xs font-bold text-zinc-400">
+                    {analyses.length}
+                  </p>
+                </div>
+
+                <p className="mt-2 text-sm text-zinc-500">
+                  Only your own analyses are shown here.
+                </p>
+              </div>
+
               {analyses.map((item) => {
                 const isSelected = selectedId === item.id;
 
@@ -126,35 +181,29 @@ export default function HistoryPage() {
                       </div>
 
                       <p className="text-xs text-zinc-500">
-                        {new Date(item.created_at).toLocaleDateString()}
+                        {formatDate(item.created_at)}
                       </p>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl bg-black px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                          Bias
-                        </p>
+                      <SmallStat
+                        label="Bias"
+                        value={item.analysis.overallBias || "N/A"}
+                      />
 
-                        <p className="mt-1 font-bold">
-                          {item.analysis.overallBias || "N/A"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-black px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                          Quality
-                        </p>
-
-                        <p className="mt-1 font-bold">
-                          {item.analysis.tradeQuality || "N/A"}
-                        </p>
-                      </div>
+                      <SmallStat
+                        label="Quality"
+                        value={item.analysis.tradeQuality || "N/A"}
+                      />
                     </div>
+
+                    <p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-500">
+                      {item.analysis.mostImportantThing || "No summary saved."}
+                    </p>
                   </button>
                 );
               })}
-            </section>
+            </aside>
 
             <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
               {!selectedAnalysis ? (
@@ -167,13 +216,13 @@ export default function HistoryPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="mb-6 flex items-start justify-between gap-4">
+                  <div className="mb-7 flex items-start justify-between gap-6">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">
                         Saved Analysis
                       </p>
 
-                      <h2 className="mt-2 text-3xl font-bold">
+                      <h2 className="mt-2 text-4xl font-bold">
                         {selectedAnalysis.market}
                       </h2>
 
@@ -182,9 +231,19 @@ export default function HistoryPage() {
                       </p>
                     </div>
 
-                    <p className="text-sm text-zinc-500">
-                      {new Date(selectedAnalysis.created_at).toLocaleString()}
-                    </p>
+                    <div className="flex flex-col items-end gap-3">
+                      <p className="text-sm text-zinc-500">
+                        {new Date(selectedAnalysis.created_at).toLocaleString()}
+                      </p>
+
+                      <button
+                        onClick={() => deleteAnalysis(selectedAnalysis.id)}
+                        disabled={deleting}
+                        className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20 disabled:opacity-40"
+                      >
+                        {deleting ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -214,39 +273,37 @@ export default function HistoryPage() {
                     }
                   />
 
-                  <DetailCard
-                    title="Key Levels"
-                    value={selectedAnalysis.analysis.keyLevels || "N/A"}
-                  />
-
-                  <DetailCard
-                    title="Market Structure"
-                    value={selectedAnalysis.analysis.marketStructure || "N/A"}
-                  />
-
                   <div className="grid gap-4 lg:grid-cols-2">
                     <DetailCard
+                      title="Key Levels"
+                      value={selectedAnalysis.analysis.keyLevels || "N/A"}
+                    />
+
+                    <DetailCard
+                      title="Market Structure"
+                      value={selectedAnalysis.analysis.marketStructure || "N/A"}
+                    />
+                  </div>
+
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                    <ScenarioCard
+                      variant="bullish"
                       title="Bullish Scenario"
-                      value={selectedAnalysis.analysis.bullishScenario || "N/A"}
-                    />
-
-                    <DetailCard
-                      title="Bearish Scenario"
-                      value={selectedAnalysis.analysis.bearishScenario || "N/A"}
-                    />
-
-                    <DetailCard
-                      title="Bullish Conditions"
-                      value={
+                      scenario={selectedAnalysis.analysis.bullishScenario || "N/A"}
+                      conditions={
                         selectedAnalysis.analysis.bullishConditions || "N/A"
                       }
+                      score={selectedAnalysis.analysis.bullishScore ?? 0}
                     />
 
-                    <DetailCard
-                      title="Bearish Conditions"
-                      value={
+                    <ScenarioCard
+                      variant="bearish"
+                      title="Bearish Scenario"
+                      scenario={selectedAnalysis.analysis.bearishScenario || "N/A"}
+                      conditions={
                         selectedAnalysis.analysis.bearishConditions || "N/A"
                       }
+                      score={selectedAnalysis.analysis.bearishScore ?? 0}
                     />
                   </div>
 
@@ -267,6 +324,47 @@ export default function HistoryPage() {
   );
 }
 
+function EmptyState({
+  title,
+  text,
+  buttonLabel,
+  buttonHref,
+}: {
+  title: string;
+  text: string;
+  buttonLabel: string;
+  buttonHref: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
+      <h2 className="text-2xl font-bold">{title}</h2>
+
+      <p className="mt-3 text-zinc-400">{text}</p>
+
+      {buttonLabel && buttonHref && (
+        <a
+          href={buttonHref}
+          className="mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
+        >
+          {buttonLabel}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function SmallStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-black p-3">
+      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+        {label}
+      </p>
+
+      <p className="mt-1 text-sm font-bold">{value}</p>
+    </div>
+  );
+}
+
 function Metric({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-black p-4">
@@ -281,7 +379,7 @@ function Metric({ title, value }: { title: string; value: string }) {
 
 function DetailCard({ title, value }: { title: string; value: string }) {
   return (
-    <div className="mb-4 rounded-2xl border border-zinc-800 bg-black p-5">
+    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
       <h3 className="text-lg font-bold">{title}</h3>
 
       <p className="mt-3 whitespace-pre-wrap leading-7 text-zinc-300">
@@ -293,7 +391,7 @@ function DetailCard({ title, value }: { title: string; value: string }) {
 
 function ImportantCard({ title, value }: { title: string; value: string }) {
   return (
-    <div className="mb-4 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
+    <div className="my-4 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-yellow-300">
         {title}
       </p>
@@ -303,4 +401,72 @@ function ImportantCard({ title, value }: { title: string; value: string }) {
       </p>
     </div>
   );
+}
+
+function ScenarioCard({
+  variant,
+  title,
+  scenario,
+  conditions,
+  score,
+}: {
+  variant: "bullish" | "bearish";
+  title: string;
+  scenario: string;
+  conditions: string;
+  score: number;
+}) {
+  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+  const isBullish = variant === "bullish";
+
+  return (
+    <div
+      className={`rounded-2xl border p-5 ${
+        isBullish
+          ? "border-green-600/60 bg-green-900/25"
+          : "border-red-600/60 bg-red-900/25"
+      }`}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-xl font-bold">{title}</h3>
+
+        <p className="text-lg font-bold">{safeScore}/100</p>
+      </div>
+
+      <div className="mb-4 rounded-2xl bg-black/60 p-4">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+          Scenario
+        </p>
+
+        <p className="whitespace-pre-wrap leading-7 text-zinc-300">
+          {scenario}
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-black/60 p-4">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+          What must happen
+        </p>
+
+        <p className="whitespace-pre-wrap leading-7 text-zinc-300">
+          {conditions}
+        </p>
+      </div>
+
+      <div className="mt-4 h-3 rounded-full bg-zinc-800">
+        <div
+          className="h-3 rounded-full bg-white"
+          style={{ width: `${safeScore}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
