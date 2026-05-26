@@ -36,6 +36,8 @@ function cleanAnalysis(rawAnalysis: any) {
   return {
     overallBias: rawAnalysis?.overallBias || "Unclear",
     tradeQuality: rawAnalysis?.tradeQuality || "No Trade",
+    marketState: rawAnalysis?.marketState || "Unclear",
+    noTradeReason: rawAnalysis?.noTradeReason || "",
     mostImportantThing:
       rawAnalysis?.mostImportantThing || "No clear priority identified.",
     keyLevels: rawAnalysis?.keyLevels || "No clear levels identified.",
@@ -106,34 +108,50 @@ You are a professional trading decision-support assistant.
 Market type: ${market}
 Planned trade duration: ${tradeDuration}
 
-You are analyzing multiple chart screenshots from different timeframes.
+The user uploaded multiple chart screenshots from different timeframes.
 
-Your goal:
-Give a practical trade decision-support analysis. Do NOT give blind buy/sell signals.
+Your job:
+Give a practical, disciplined, market-state-based analysis. The user needs to understand what condition the market is in right now and whether there is a clear edge.
 
-Important:
-- Never say "buy", "sell", "go long", "go short", or "enter now".
-- You may say "bullish setup is valid only if..." or "bearish setup is valid only if..."
-- Final decision must be one of:
-  - "No trade"
-  - "Wait for confirmation"
-  - "Bullish scenario favored only if..."
-  - "Bearish scenario favored only if..."
+Do NOT give blind trade signals.
+
+Strict language rules:
+- Never say "buy now", "sell now", "enter now", "go long now", or "go short now".
 - Do not give financial advice.
 - Do not pretend certainty.
-- If the chart is unclear, say No Trade.
+- You may say:
+  - "Bullish scenario is valid only if..."
+  - "Bearish scenario is valid only if..."
+  - "Wait for confirmation..."
+  - "No trade because..."
+- If setup is unclear, say No Trade clearly.
+
+Market state classification:
+You must classify the marketState as exactly one of:
+- Trending
+- Ranging
+- Pullback
+- Breakout
+- Reversal attempt
+- Choppy / No edge
+- Unclear
+
+No-trade discipline:
+- If price is in chop, unclear range, late move, mixed timeframe conflict, or directly into nearby support/resistance, tradeQuality should be "No Trade" or "Bad".
+- If tradeQuality is "No Trade", noTradeReason must explain the exact reason.
+- If tradeQuality is not "No Trade", noTradeReason can be empty.
 
 Timeframe priority:
-- Scalp: prioritize 5M, 15M, 1H. Higher timeframes only matter if they show immediate major resistance/support.
+- Scalp: prioritize 5M, 15M, 1H. Higher timeframes only matter if they show immediate major support/resistance.
 - Intraday: prioritize 15M, 1H, 4H.
 - Session trade: prioritize 15M, 1H, 2H, 4H.
 - Swing: prioritize 4H and Daily.
 - Position: prioritize Daily and 4H.
 
-Scoring rules:
+Score rules:
 - Scores are from 0 to 100.
 - Never use 0–10 scale.
-- If you write Good or High-quality, at least one scenario score should usually be above 60.
+- If you write Good, at least one scenario score should usually be above 60.
 - If both scenario scores are below 40, tradeQuality must be Bad or No Trade.
 - Scores above 75 should be rare and require strong alignment across relevant timeframes.
 - If the setup is mixed, both scores should usually stay between 35 and 65.
@@ -145,12 +163,15 @@ Output style:
 - Short.
 - Practical.
 - No generic textbook explanations.
+- Prefer conditions over predictions.
 
 Return ONLY valid JSON in this exact structure:
 
 {
   "overallBias": "Bullish | Bearish | Neutral | Unclear",
   "tradeQuality": "Bad | Moderate | Good | No Trade",
+  "marketState": "Trending | Ranging | Pullback | Breakout | Reversal attempt | Choppy / No edge | Unclear",
+  "noTradeReason": "",
   "mostImportantThing": "",
   "keyLevels": "",
   "marketStructure": "",
@@ -165,14 +186,16 @@ Return ONLY valid JSON in this exact structure:
 }
 
 Field rules:
-- mostImportantThing: one clear sentence about what matters most right now.
-- keyLevels: 2–4 short points only. If exact price levels are not visible, describe zones generally.
+- marketState: one of the allowed market state labels.
+- noTradeReason: required only if tradeQuality is No Trade.
+- mostImportantThing: one direct sentence about what matters most right now.
+- keyLevels: 2–4 short points. If exact price levels are not visible, describe zones generally.
 - marketStructure: 2–3 clear sentences.
 - bullishScenario: describe upside case without telling user to buy.
-- bullishConditions: explain what must happen before bullish case is valid.
+- bullishConditions: what must happen before bullish case is valid.
 - bearishScenario: describe downside case without telling user to sell.
-- bearishConditions: explain what must happen before bearish case is valid.
-- finalDecision: strict and cautious.
+- bearishConditions: what must happen before bearish case is valid.
+- finalDecision: strict, cautious and actionable.
 `,
       },
     ];
@@ -207,6 +230,9 @@ Field rules:
       parsedAnalysis = {
         overallBias: "Unclear",
         tradeQuality: "No Trade",
+        marketState: "Unclear",
+        noTradeReason:
+          "The AI response could not be parsed clearly, so the setup should be treated as no trade.",
         mostImportantThing:
           "The AI response could not be parsed clearly, so this should be treated as no trade.",
         keyLevels: "No reliable key levels could be extracted.",
@@ -231,12 +257,6 @@ Field rules:
         market,
         trade_duration: tradeDuration,
         analysis,
-        trade_status: "Not taken",
-        trade_result: "Pending",
-        risk_amount: "",
-        risk_percent: "",
-        emotion: "",
-        journal_notes: "",
       })
       .select("id")
       .single();
