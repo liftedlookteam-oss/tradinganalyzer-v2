@@ -248,6 +248,7 @@ Return ONLY valid JSON in this exact structure:
       .insert({
         user_id: userId,
         market,
+instrument: instrument || null,
         trade_duration: tradeDuration,
         analysis,
       })

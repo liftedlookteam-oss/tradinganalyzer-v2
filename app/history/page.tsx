@@ -1,452 +1,158 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { UserButton, useUser } from "@clerk/nextjs";
 
-type SavedAnalysis = {
+type HistoryItem = {
   id: string;
-  created_at: string;
   market: string;
+  instrument?: string | null;
   trade_duration: string;
   analysis: {
-    overallBias?: string;
-    tradeQuality?: string;
-    mostImportantThing?: string;
-    keyLevels?: string;
-    marketStructure?: string;
-    bullishScenario?: string;
-    bullishConditions?: string;
-    bearishScenario?: string;
-    bearishConditions?: string;
-    bullishScore?: number;
-    bearishScore?: number;
-    finalDecision?: string;
+    overallBias: string;
+    tradeQuality: string;
+    marketState?: string;
+    mostImportantThing: string;
+    bullishScore: number;
+    bearishScore: number;
+    finalDecision: string;
   };
+  created_at: string;
 };
 
 export default function HistoryPage() {
-  const { isSignedIn, isLoaded } = useUser();
-
-  const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [marketFilter, setMarketFilter] = useState("All");
-  const [biasFilter, setBiasFilter] = useState("All");
-  const [qualityFilter, setQualityFilter] = useState("All");
-  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [filter, setFilter] = useState("All");
 
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      window.location.href = "/sign-in";
-      return;
-    }
-
-    async function loadHistory() {
-      try {
-        const response = await fetch("/api/history");
-        const data = await response.json();
-
-        if (data.success) {
-          const saved = data.analyses || [];
-          setAnalyses(saved);
-
-          if (saved.length > 0) {
-            setSelectedId(saved[0].id);
-          }
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadHistory();
-  }, [isLoaded, isSignedIn]);
-
-  const markets = useMemo(() => {
-    return ["All", ...Array.from(new Set(analyses.map((item) => item.market)))];
-  }, [analyses]);
-
-  const filteredAnalyses = useMemo(() => {
-    const query = search.toLowerCase().trim();
-
-    return analyses
-      .filter((item) => {
-        const combined = [
-          item.market,
-          item.trade_duration,
-          item.analysis.overallBias,
-          item.analysis.tradeQuality,
-          item.analysis.mostImportantThing,
-          item.analysis.finalDecision,
-          item.analysis.keyLevels,
-          item.analysis.marketStructure,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        const matchesSearch = !query || combined.includes(query);
-        const matchesMarket =
-          marketFilter === "All" || item.market === marketFilter;
-        const matchesBias =
-          biasFilter === "All" || item.analysis.overallBias === biasFilter;
-        const matchesQuality =
-          qualityFilter === "All" ||
-          item.analysis.tradeQuality === qualityFilter;
-
-        return (
-          matchesSearch && matchesMarket && matchesBias && matchesQuality
-        );
-      })
-      .sort((a, b) => {
-        const aTime = new Date(a.created_at).getTime();
-        const bTime = new Date(b.created_at).getTime();
-
-        return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
-      });
-  }, [analyses, search, marketFilter, biasFilter, qualityFilter, sortOrder]);
-
-  const selectedAnalysis = useMemo(
-    () => filteredAnalyses.find((item) => item.id === selectedId) || null,
-    [filteredAnalyses, selectedId]
-  );
-
-  useEffect(() => {
-    if (filteredAnalyses.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-
-    const stillExists = filteredAnalyses.some((item) => item.id === selectedId);
-
-    if (!stillExists) {
-      setSelectedId(filteredAnalyses[0].id);
-    }
-  }, [filteredAnalyses, selectedId]);
-
-  async function deleteAnalysis(id: string) {
-    const confirmed = confirm("Delete this saved analysis?");
-    if (!confirmed) return;
-
-    setDeleting(true);
-
+  async function loadHistory() {
     try {
-      const response = await fetch(`/api/history?id=${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch("/api/history");
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        alert(data.error || "Failed to delete analysis.");
-        return;
-      }
-
-      const updated = analyses.filter((item) => item.id !== id);
-      setAnalyses(updated);
-
-      if (selectedId === id) {
-        setSelectedId(updated[0]?.id || null);
-      }
+      setItems(data.items || []);
+    } catch {
+      console.error("Failed to load history");
     } finally {
-      setDeleting(false);
+      setLoading(false);
     }
   }
 
+  async function deleteItem(id: string) {
+    const confirmed = confirm(
+      "Delete this analysis permanently?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await fetch("/api/history", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      setItems((prev) =>
+        prev.filter((item) => item.id !== id)
+      );
+    } catch {
+      alert("Failed to delete analysis.");
+    }
+  }
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesSearch =
+        item.market
+          ?.toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.instrument
+          ?.toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.analysis?.overallBias
+          ?.toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.analysis?.marketState
+          ?.toLowerCase()
+          .includes(search.toLowerCase());
+
+      const matchesFilter =
+        filter === "All" ||
+        item.analysis?.overallBias === filter;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [items, search, filter]);
+
   return (
-    <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
+    <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
-              Saved Setups
+              Saved Analyses
             </p>
 
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1 className="text-5xl font-bold tracking-tight">
               Analysis History
             </h1>
-
-            <p className="mt-3 max-w-2xl text-zinc-500">
-              Search, filter and review your previous chart analyses.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <a
-              href="/"
-              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
+          <a
+            href="/"
+            className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+          >
+            Back to Analyzer
+          </a>
+        </div>
+
+        <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search market, instrument, bias or market state..."
+              className="w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white"
+            />
+
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none focus:border-white"
             >
-              New Analysis
-            </a>
-
-            <UserButton />
+              <option>All</option>
+              <option>Bullish</option>
+              <option>Bearish</option>
+              <option>Neutral</option>
+              <option>Unclear</option>
+            </select>
           </div>
-        </header>
+        </section>
 
         {loading ? (
-          <EmptyState
-            title="Loading history..."
-            text="Fetching your saved analyses."
-            buttonLabel=""
-            buttonHref=""
-          />
-        ) : analyses.length === 0 ? (
-          <EmptyState
-            title="No saved analyses yet"
-            text="Run your first chart analysis and it will appear here."
-            buttonLabel="Start Analysis"
-            buttonHref="/"
-          />
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8 text-center text-zinc-400">
+            Loading history...
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8 text-center text-zinc-400">
+            No analyses found.
+          </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[410px_1fr]">
-            <aside className="space-y-4">
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-                    Saved
-                  </p>
-
-                  <p className="rounded-full bg-black px-3 py-1 text-xs font-bold text-zinc-400">
-                    {filteredAnalyses.length}/{analyses.length}
-                  </p>
-                </div>
-
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search analyses..."
-                  className="mt-4 w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white"
-                />
-
-                <div className="mt-4 grid gap-3">
-                  <select
-                    value={marketFilter}
-                    onChange={(event) => setMarketFilter(event.target.value)}
-                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
-                  >
-                    {markets.map((market) => (
-                      <option key={market} value={market}>
-                        Market: {market}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={biasFilter}
-                    onChange={(event) => setBiasFilter(event.target.value)}
-                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
-                  >
-                    <option value="All">Bias: All</option>
-                    <option value="Bullish">Bias: Bullish</option>
-                    <option value="Bearish">Bias: Bearish</option>
-                    <option value="Neutral">Bias: Neutral</option>
-                    <option value="Unclear">Bias: Unclear</option>
-                  </select>
-
-                  <select
-                    value={qualityFilter}
-                    onChange={(event) => setQualityFilter(event.target.value)}
-                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
-                  >
-                    <option value="All">Quality: All</option>
-                    <option value="Good">Quality: Good</option>
-                    <option value="Moderate">Quality: Moderate</option>
-                    <option value="Bad">Quality: Bad</option>
-                    <option value="No Trade">Quality: No Trade</option>
-                  </select>
-
-                  <select
-                    value={sortOrder}
-                    onChange={(event) =>
-                      setSortOrder(event.target.value as "newest" | "oldest")
-                    }
-                    className="rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white"
-                  >
-                    <option value="newest">Sort: Newest first</option>
-                    <option value="oldest">Sort: Oldest first</option>
-                  </select>
-                </div>
-              </div>
-
-              {filteredAnalyses.length === 0 ? (
-                <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-                  <p className="font-bold">No matches</p>
-                  <p className="mt-2 text-sm text-zinc-500">
-                    Try changing your filters or search term.
-                  </p>
-                </div>
-              ) : (
-                filteredAnalyses.map((item) => {
-                  const isSelected = selectedId === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedId(item.id)}
-                      className={`w-full rounded-3xl border p-5 text-left transition ${
-                        isSelected
-                          ? "border-white bg-zinc-900"
-                          : "border-zinc-800 bg-zinc-950 hover:border-zinc-600"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-lg font-bold">{item.market}</p>
-
-                          <p className="mt-1 text-sm text-zinc-500">
-                            {item.trade_duration}
-                          </p>
-                        </div>
-
-                        <p className="text-xs text-zinc-500">
-                          {formatDate(item.created_at)}
-                        </p>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                        <SmallStat
-                          label="Bias"
-                          value={item.analysis.overallBias || "N/A"}
-                        />
-
-                        <SmallStat
-                          label="Quality"
-                          value={item.analysis.tradeQuality || "N/A"}
-                        />
-                      </div>
-
-                      <p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-500">
-                        {item.analysis.mostImportantThing ||
-                          "No summary saved."}
-                      </p>
-                    </button>
-                  );
-                })
-              )}
-            </aside>
-
-            <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
-              {!selectedAnalysis ? (
-                <div>
-                  <h2 className="text-2xl font-bold">Select an analysis</h2>
-
-                  <p className="mt-3 text-zinc-400">
-                    Choose a saved setup from the left to view the full analysis.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <div className="mb-7 flex items-start justify-between gap-6">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">
-                        Saved Analysis
-                      </p>
-
-                      <h2 className="mt-2 text-4xl font-bold">
-                        {selectedAnalysis.market}
-                      </h2>
-
-                      <p className="mt-2 text-zinc-400">
-                        {selectedAnalysis.trade_duration}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-3">
-                      <p className="text-sm text-zinc-500">
-                        {new Date(selectedAnalysis.created_at).toLocaleString()}
-                      </p>
-
-                      <button
-                        onClick={() => deleteAnalysis(selectedAnalysis.id)}
-                        disabled={deleting}
-                        className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20 disabled:opacity-40"
-                      >
-                        {deleting ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mb-6 grid gap-4 md:grid-cols-3">
-                    <Metric
-                      title="Bias"
-                      value={selectedAnalysis.analysis.overallBias || "N/A"}
-                    />
-
-                    <Metric
-                      title="Quality"
-                      value={selectedAnalysis.analysis.tradeQuality || "N/A"}
-                    />
-
-                    <Metric
-                      title="Bull / Bear"
-                      value={`${selectedAnalysis.analysis.bullishScore ?? 0}/${
-                        selectedAnalysis.analysis.bearishScore ?? 0
-                      }`}
-                    />
-                  </div>
-
-                  <ImportantCard
-                    title="Most Important Thing Right Now"
-                    value={
-                      selectedAnalysis.analysis.mostImportantThing ||
-                      "No key priority saved."
-                    }
-                  />
-
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <DetailCard
-                      title="Key Levels"
-                      value={selectedAnalysis.analysis.keyLevels || "N/A"}
-                    />
-
-                    <DetailCard
-                      title="Market Structure"
-                      value={
-                        selectedAnalysis.analysis.marketStructure || "N/A"
-                      }
-                    />
-                  </div>
-
-                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                    <ScenarioCard
-                      variant="bullish"
-                      title="Bullish Scenario"
-                      scenario={
-                        selectedAnalysis.analysis.bullishScenario || "N/A"
-                      }
-                      conditions={
-                        selectedAnalysis.analysis.bullishConditions || "N/A"
-                      }
-                      score={selectedAnalysis.analysis.bullishScore ?? 0}
-                    />
-
-                    <ScenarioCard
-                      variant="bearish"
-                      title="Bearish Scenario"
-                      scenario={
-                        selectedAnalysis.analysis.bearishScenario || "N/A"
-                      }
-                      conditions={
-                        selectedAnalysis.analysis.bearishConditions || "N/A"
-                      }
-                      score={selectedAnalysis.analysis.bearishScore ?? 0}
-                    />
-                  </div>
-
-                  <ImportantCard
-                    title="Final Decision"
-                    value={
-                      selectedAnalysis.analysis.finalDecision ||
-                      "No final decision saved."
-                    }
-                  />
-                </div>
-              )}
-            </section>
+          <div className="grid gap-6">
+            {filteredItems.map((item) => (
+              <HistoryCard
+                key={item.id}
+                item={item}
+                onDelete={() => deleteItem(item.id)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -454,149 +160,166 @@ export default function HistoryPage() {
   );
 }
 
-function EmptyState({
-  title,
-  text,
-  buttonLabel,
-  buttonHref,
+function HistoryCard({
+  item,
+  onDelete,
 }: {
-  title: string;
-  text: string;
-  buttonLabel: string;
-  buttonHref: string;
+  item: HistoryItem;
+  onDelete: () => void;
+}) {
+  const date = new Date(item.created_at);
+
+  return (
+    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-zinc-300">
+              {item.market}
+            </span>
+
+            {item.instrument && (
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-black">
+                {item.instrument}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <MetricBadge
+              label="Bias"
+              value={item.analysis?.overallBias || "Unknown"}
+            />
+
+            <MetricBadge
+              label="Quality"
+              value={item.analysis?.tradeQuality || "Unknown"}
+            />
+
+            <MetricBadge
+              label="State"
+              value={item.analysis?.marketState || "Unknown"}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm text-zinc-500">
+              {date.toLocaleDateString()}
+            </p>
+
+            <p className="mt-1 text-sm text-zinc-600">
+              {item.trade_duration}
+            </p>
+          </div>
+
+          <button
+            onClick={onDelete}
+            className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <ScoreCard
+          type="bullish"
+          score={item.analysis?.bullishScore || 0}
+        />
+
+        <ScoreCard
+          type="bearish"
+          score={item.analysis?.bearishScore || 0}
+        />
+      </div>
+
+      <div className="mt-5 rounded-2xl bg-black p-5">
+        <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
+          Most Important Thing
+        </p>
+
+        <p className="leading-8 text-zinc-300">
+          {item.analysis?.mostImportantThing ||
+            "No important insight available."}
+        </p>
+      </div>
+
+      <div className="mt-5 rounded-2xl bg-black p-5">
+        <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
+          Final Decision
+        </p>
+
+        <p className="leading-8 text-white">
+          {item.analysis?.finalDecision ||
+            "No final decision available."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MetricBadge({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
 }) {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
-      <h2 className="text-2xl font-bold">{title}</h2>
-
-      <p className="mt-3 text-zinc-400">{text}</p>
-
-      {buttonLabel && buttonHref && (
-        <a
-          href={buttonHref}
-          className="mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
-        >
-          {buttonLabel}
-        </a>
-      )}
-    </div>
-  );
-}
-
-function SmallStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-black p-3">
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+    <div className="rounded-full border border-zinc-700 bg-black px-4 py-2">
+      <span className="mr-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
         {label}
-      </p>
+      </span>
 
-      <p className="mt-1 text-sm font-bold">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-black p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-        {title}
-      </p>
-
-      <p className="mt-2 text-xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function DetailCard({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
-      <h3 className="text-lg font-bold">{title}</h3>
-
-      <p className="mt-3 whitespace-pre-wrap leading-7 text-zinc-300">
+      <span className="text-sm font-semibold text-white">
         {value}
-      </p>
+      </span>
     </div>
   );
 }
 
-function ImportantCard({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="my-4 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-yellow-300">
-        {title}
-      </p>
-
-      <p className="mt-3 text-xl font-bold leading-tight text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function ScenarioCard({
-  variant,
-  title,
-  scenario,
-  conditions,
+function ScoreCard({
+  type,
   score,
 }: {
-  variant: "bullish" | "bearish";
-  title: string;
-  scenario: string;
-  conditions: string;
+  type: "bullish" | "bearish";
   score: number;
 }) {
-  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
-  const isBullish = variant === "bullish";
+  const safeScore = Math.max(
+    0,
+    Math.min(100, Number(score) || 0)
+  );
+
+  const isBullish = type === "bullish";
 
   return (
     <div
       className={`rounded-2xl border p-5 ${
         isBullish
-          ? "border-green-600/60 bg-green-900/25"
-          : "border-red-600/60 bg-red-900/25"
+          ? "border-green-600/60 bg-green-900/20"
+          : "border-red-600/60 bg-red-900/20"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-xl font-bold">{title}</h3>
-
-        <p className="text-lg font-bold">{safeScore}/100</p>
-      </div>
-
-      <div className="mb-4 rounded-2xl bg-black/60 p-4">
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
-          Scenario
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-lg font-bold">
+          {isBullish ? "Bullish" : "Bearish"} Score
         </p>
 
-        <p className="whitespace-pre-wrap leading-7 text-zinc-300">
-          {scenario}
+        <p className="text-2xl font-bold">
+          {safeScore}/100
         </p>
       </div>
 
-      <div className="rounded-2xl bg-black/60 p-4">
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
-          What must happen
-        </p>
-
-        <p className="whitespace-pre-wrap leading-7 text-zinc-300">
-          {conditions}
-        </p>
-      </div>
-
-      <div className="mt-4 h-3 rounded-full bg-zinc-800">
+      <div className="relative h-4 rounded-full bg-zinc-800">
         <div
-          className="h-3 rounded-full bg-white"
-          style={{ width: `${safeScore}%` }}
+          className="absolute left-0 top-0 h-4 rounded-full bg-white"
+          style={{
+            width: `${safeScore}%`,
+          }}
         />
       </div>
     </div>
   );
-}
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
