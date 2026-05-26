@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description:
     "AI-powered multi-timeframe trading analysis for forex, crypto, stocks and futures.",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.ico",
   },
 };
 
