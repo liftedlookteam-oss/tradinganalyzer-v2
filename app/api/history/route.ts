@@ -11,7 +11,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("analyses")
-      .select("*")
+      .select("id, created_at, user_id, market, instrument, trade_duration, analysis")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -21,73 +21,14 @@ export async function GET() {
 
     return Response.json({
       success: true,
-      analyses: data,
+      items: data || [],
+      analyses: data || [],
     });
   } catch (error) {
-    console.error(error);
+    console.error("HISTORY_GET_ERROR:", error);
 
     return Response.json(
       { error: "Failed to load history." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return Response.json({ error: "Unauthorized." }, { status: 401 });
-    }
-
-    const body = await request.json();
-
-    const {
-      id,
-      trade_status,
-      trade_result,
-      risk_amount,
-      risk_percent,
-      emotion,
-      journal_notes,
-    } = body;
-
-    if (!id) {
-      return Response.json(
-        { error: "Missing analysis id." },
-        { status: 400 }
-      );
-    }
-
-    const { error } = await supabase
-      .from("analyses")
-      .update({
-        trade_status,
-        trade_result,
-        risk_amount,
-        risk_percent,
-        emotion,
-        journal_notes,
-      })
-      .eq("id", id)
-      .eq("user_id", userId);
-
-    if (error) {
-      return Response.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
-    return Response.json({
-      success: true,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return Response.json(
-      { error: "Failed to update journal." },
       { status: 500 }
     );
   }
@@ -101,8 +42,15 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    let id: string | null = null;
+
+    try {
+      const body = await request.json();
+      id = body?.id || null;
+    } catch {
+      const { searchParams } = new URL(request.url);
+      id = searchParams.get("id");
+    }
 
     if (!id) {
       return Response.json(
@@ -118,17 +66,12 @@ export async function DELETE(request: Request) {
       .eq("user_id", userId);
 
     if (error) {
-      return Response.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return Response.json({ error: error.message }, { status: 500 });
     }
 
-    return Response.json({
-      success: true,
-    });
+    return Response.json({ success: true });
   } catch (error) {
-    console.error(error);
+    console.error("HISTORY_DELETE_ERROR:", error);
 
     return Response.json(
       { error: "Failed to delete analysis." },
