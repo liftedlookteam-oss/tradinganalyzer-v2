@@ -26,12 +26,15 @@ export default function HistoryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
+  const [deleteTarget, setDeleteTarget] = useState<HistoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   async function loadHistory() {
     try {
       const response = await fetch("/api/history");
       const data = await response.json();
 
-      setItems(data.items || []);
+      setItems(data.items || data.analyses || []);
     } catch {
       console.error("Failed to load history");
     } finally {
@@ -39,27 +42,38 @@ export default function HistoryPage() {
     }
   }
 
-  async function deleteItem(id: string) {
-    const confirmed = confirm(
-      "Delete this analysis permanently?"
-    );
+  async function confirmDelete() {
+    if (!deleteTarget) return;
 
-    if (!confirmed) return;
+    setDeleting(true);
 
     try {
-      await fetch("/api/history", {
+      const response = await fetch("/api/history", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({
+          id: deleteTarget.id,
+        }),
       });
 
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        alert(data.error || "Failed to delete analysis.");
+        return;
+      }
+
       setItems((prev) =>
-        prev.filter((item) => item.id !== id)
+        prev.filter((item) => item.id !== deleteTarget.id)
       );
+
+      setDeleteTarget(null);
     } catch {
       alert("Failed to delete analysis.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -69,23 +83,17 @@ export default function HistoryPage() {
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      const query = search.toLowerCase();
+
       const matchesSearch =
-        item.market
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-        item.instrument
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-        item.analysis?.overallBias
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-        item.analysis?.marketState
-          ?.toLowerCase()
-          .includes(search.toLowerCase());
+        item.market?.toLowerCase().includes(query) ||
+        item.instrument?.toLowerCase().includes(query) ||
+        item.analysis?.overallBias?.toLowerCase().includes(query) ||
+        item.analysis?.marketState?.toLowerCase().includes(query) ||
+        item.analysis?.tradeQuality?.toLowerCase().includes(query);
 
       const matchesFilter =
-        filter === "All" ||
-        item.analysis?.overallBias === filter;
+        filter === "All" || item.analysis?.overallBias === filter;
 
       return matchesSearch && matchesFilter;
     });
@@ -150,12 +158,66 @@ export default function HistoryPage() {
               <HistoryCard
                 key={item.id}
                 item={item}
-                onDelete={() => deleteItem(item.id)}
+                onDelete={() => setDeleteTarget(item)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+            <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-red-300">
+              Delete Analysis
+            </p>
+
+            <h2 className="text-2xl font-bold">
+              Are you sure?
+            </h2>
+
+            <p className="mt-3 text-zinc-400">
+              This saved analysis will be permanently removed from your history.
+            </p>
+
+            <div className="mt-5 rounded-2xl bg-black p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-semibold text-zinc-300">
+                  {deleteTarget.market}
+                </span>
+
+                {deleteTarget.instrument && (
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-black">
+                    {deleteTarget.instrument}
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-3 text-sm text-zinc-500">
+                {deleteTarget.trade_duration}
+              </p>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="rounded-2xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-white hover:text-white disabled:opacity-40"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="rounded-2xl border border-red-500/40 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20 disabled:opacity-40"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -287,11 +349,7 @@ function ScoreCard({
   type: "bullish" | "bearish";
   score: number;
 }) {
-  const safeScore = Math.max(
-    0,
-    Math.min(100, Number(score) || 0)
-  );
-
+  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
   const isBullish = type === "bullish";
 
   return (
