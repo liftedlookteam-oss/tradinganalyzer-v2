@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
 
     const market = formData.get("market") as string;
+    const instrument = ((formData.get("instrument") as string) || "").trim();
     const tradeDuration = formData.get("tradeDuration") as string;
 
     const imageInputs = [];
@@ -106,9 +107,13 @@ export async function POST(request: Request) {
 You are a professional trading decision-support assistant.
 
 Market type: ${market}
+Instrument / pair / ticker: ${instrument || "Not provided"}
 Planned trade duration: ${tradeDuration}
 
 The user uploaded multiple chart screenshots from different timeframes.
+
+Use the instrument only as extra context. The screenshots are the primary source of truth.
+If no instrument is provided, analyze normally without guessing the instrument.
 
 Your job:
 Give a practical, disciplined, market-state-based analysis. The user needs to understand what condition the market is in right now and whether there is a clear edge.
@@ -184,18 +189,6 @@ Return ONLY valid JSON in this exact structure:
   "scoreReason": "",
   "finalDecision": ""
 }
-
-Field rules:
-- marketState: one of the allowed market state labels.
-- noTradeReason: required only if tradeQuality is No Trade.
-- mostImportantThing: one direct sentence about what matters most right now.
-- keyLevels: 2–4 short points. If exact price levels are not visible, describe zones generally.
-- marketStructure: 2–3 clear sentences.
-- bullishScenario: describe upside case without telling user to buy.
-- bullishConditions: what must happen before bullish case is valid.
-- bearishScenario: describe downside case without telling user to sell.
-- bearishConditions: what must happen before bearish case is valid.
-- finalDecision: strict, cautious and actionable.
 `,
       },
     ];

@@ -135,6 +135,7 @@ export default function Home() {
   });
 
   const [market, setMarket] = useState("Forex");
+  const [instrument, setInstrument] = useState("");
   const [tradeDuration, setTradeDuration] = useState(
     "Intraday: 30 minutes–4 hours"
   );
@@ -183,6 +184,7 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("market", market);
+    formData.append("instrument", instrument.trim());
     formData.append("tradeDuration", tradeDuration);
 
     for (const [key, file] of uploadedFiles) {
@@ -239,6 +241,10 @@ export default function Home() {
 
   const uploadedCount = Object.values(files).filter(Boolean).length;
   const canAnalyze = uploadedCount >= 2;
+
+  if (loading) {
+    return <LoadingView message={loadingMessages[loadingIndex]} />;
+  }
 
   if (showResults && analysis) {
     return (
@@ -483,6 +489,26 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <div>
+            <h2 className="text-2xl font-bold">
+              Instrument / Pair / Ticker
+            </h2>
+
+            <p className="mt-2 text-zinc-400">
+              Optional. Add the symbol if you want extra context, or leave it
+              empty.
+            </p>
+          </div>
+
+          <input
+            value={instrument}
+            onChange={(event) => setInstrument(event.target.value)}
+            placeholder="Example: EURUSD, XAUUSD, BTCUSDT, NAS100, AAPL"
+            className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white"
+          />
+        </section>
+
         <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {timeframes.map((timeframe) => (
             <UploadBox
@@ -502,29 +528,66 @@ export default function Home() {
           className="mt-8 w-full rounded-2xl bg-white px-6 py-5 text-lg font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-30"
           disabled={!canAnalyze || loading}
         >
-          {loading
-            ? loadingMessages[loadingIndex]
-            : canAnalyze
+          {canAnalyze
             ? `Analyze ${market} Setup`
             : "Upload at least 2 timeframes to analyze"}
         </button>
-
-        {loading && (
-          <div className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-4 w-4 animate-pulse rounded-full bg-white" />
-
-              <p className="text-lg font-medium text-zinc-300">
-                {loadingMessages[loadingIndex]}
-              </p>
-            </div>
-
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-zinc-800">
-              <div className="h-full w-1/2 animate-pulse rounded-full bg-white" />
-            </div>
-          </div>
-        )}
       </div>
+    </main>
+  );
+}
+
+function LoadingView({ message }: { message: string }) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
+      <section className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
+          Analysis Running
+        </p>
+
+        <h1 className="text-4xl font-bold">
+          Analyzing your setup
+        </h1>
+
+        <p className="mt-4 text-lg text-zinc-400">
+          Do not close this page. Your chart context is being processed.
+        </p>
+
+        <div className="mt-8 space-y-4">
+          {loadingMessages.map((item, index) => {
+            const active = item === message;
+            const completed =
+              loadingMessages.indexOf(message) > index;
+
+            return (
+              <div
+                key={item}
+                className={`flex items-center gap-4 rounded-2xl border px-5 py-4 transition ${
+                  active
+                    ? "border-white bg-white text-black"
+                    : completed
+                    ? "border-zinc-700 bg-black text-zinc-300"
+                    : "border-zinc-800 bg-black text-zinc-600"
+                }`}
+              >
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+                    active
+                      ? "bg-black text-white"
+                      : completed
+                      ? "bg-white text-black"
+                      : "bg-zinc-900 text-zinc-600"
+                  }`}
+                >
+                  {completed ? "✓" : index + 1}
+                </div>
+
+                <p className="font-semibold">{item}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </main>
   );
 }
