@@ -18,21 +18,13 @@ const timeframeLabels: Record<string, string> = {
 function normalizeScore(value: unknown) {
   const score = Number(value);
 
-  if (!Number.isFinite(score)) {
-    return 0;
-  }
-
-  if (score > 0 && score <= 10) {
-    return Math.round(score * 10);
-  }
+  if (!Number.isFinite(score)) return 0;
+  if (score > 0 && score <= 10) return Math.round(score * 10);
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function cleanAnalysis(rawAnalysis: any) {
-  const bullishScore = normalizeScore(rawAnalysis?.bullishScore);
-  const bearishScore = normalizeScore(rawAnalysis?.bearishScore);
-
   return {
     overallBias: rawAnalysis?.overallBias || "Unclear",
     tradeQuality: rawAnalysis?.tradeQuality || "No Trade",
@@ -53,13 +45,23 @@ function cleanAnalysis(rawAnalysis: any) {
     bearishConditions:
       rawAnalysis?.bearishConditions ||
       "No clear bearish confirmation conditions.",
-    bullishScore,
-    bearishScore,
+    bullishScore: normalizeScore(rawAnalysis?.bullishScore),
+    bearishScore: normalizeScore(rawAnalysis?.bearishScore),
     scoreReason: rawAnalysis?.scoreReason || "",
     finalDecision:
       rawAnalysis?.finalDecision ||
       "No trade until clearer confirmation appears.",
   };
+}
+
+function isWithinLast24Hours(dateValue: string | null) {
+  if (!dateValue) return false;
+
+  const lastUsed = new Date(dateValue).getTime();
+  const now = Date.now();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+
+  return now - lastUsed < twentyFourHours;
 }
 
 export async function POST(request: Request) {
@@ -68,6 +70,32 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return Response.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isPro = subscription?.status === "active";
+
+    if (!isPro) {
+      const { data: usage } = await supabase
+        .from("user_usage")
+        .select("last_free_analysis_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (usage && isWithinLast24Hours(usage.last_free_analysis_at)) {
+        return Response.json(
+          {
+            error: "Free daily analysis already used.",
+            code: "FREE_LIMIT_REACHED",
+          },
+          { status: 402 }
+        );
+      }
     }
 
     const formData = await request.formData();
@@ -248,7 +276,7 @@ Return ONLY valid JSON in this exact structure:
       .insert({
         user_id: userId,
         market,
-instrument: instrument || null,
+        instrument: instrument || null,
         trade_duration: tradeDuration,
         analysis,
       })
@@ -265,6 +293,13 @@ instrument: instrument || null,
         },
         { status: 500 }
       );
+    }
+
+    if (!isPro) {
+      await supabase.from("user_usage").upsert({
+        user_id: userId,
+        last_free_analysis_at: new Date().toISOString(),
+      });
     }
 
     return Response.json({
