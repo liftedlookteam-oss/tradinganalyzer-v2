@@ -113,6 +113,7 @@ export default function Home() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [canAnalyze, setCanAnalyze] = useState(true);
+
   const [remainingHours, setRemainingHours] = useState(0);
   const [remainingMinutes, setRemainingMinutes] = useState(0);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -417,7 +418,9 @@ export default function Home() {
               <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div>
                   <h2 className="text-4xl font-bold leading-tight">
-                    Analyze without limits.
+                    <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                      Analyze without limits.
+                    </span>
                   </h2>
 
                   <p className="mt-4 max-w-xl leading-8 text-zinc-400">
@@ -433,21 +436,22 @@ export default function Home() {
             </div>
 
             <div className="grid gap-4 p-6 md:grid-cols-2">
-              <button className="rounded-3xl border border-zinc-800 bg-black p-6 text-left transition hover:border-zinc-500">
-                <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+              <button className="rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200">
+                <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
                   Weekly
                 </p>
 
                 <div className="mt-4 flex items-end gap-2">
                   <p className="text-4xl font-bold">€4.99</p>
-                  <p className="mb-1 text-zinc-500">/ week</p>
+                  <p className="mb-1 text-zinc-600">/ week</p>
                 </div>
 
-                <p className="mt-4 leading-7 text-zinc-400">
-                  Best if you want to test Pro access before committing.
+                <p className="mt-4 leading-7 text-zinc-700">
+                  Flexible access for traders who want unlimited analysis
+                  without a monthly commitment.
                 </p>
 
-                <div className="mt-6 rounded-2xl border border-zinc-700 px-4 py-3 text-center font-bold text-white">
+                <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-center font-bold text-white">
                   Choose Weekly
                 </div>
               </button>
