@@ -117,6 +117,28 @@ export default function Home() {
   const [remainingHours, setRemainingHours] = useState(0);
   const [remainingMinutes, setRemainingMinutes] = useState(0);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+async function startCheckout(plan: "weekly" | "monthly") {
+  try {
+    const response = await fetch("/api/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ plan }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.error || "Checkout failed.");
+      return;
+    }
+
+    window.location.href = data.url;
+  } catch {
+    alert("Checkout failed.");
+  }
+}
 
   useEffect(() => {
     async function checkUsage() {
@@ -436,7 +458,9 @@ export default function Home() {
             </div>
 
             <div className="grid gap-4 p-6 md:grid-cols-2">
-              <button className="rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200">
+              <button
+  onClick={() => startCheckout("weekly")}
+  className="rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
                   Weekly
                 </p>
@@ -456,7 +480,9 @@ export default function Home() {
                 </div>
               </button>
 
-              <button className="relative rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200">
+              <button
+  onClick={() => startCheckout("monthly")}
+  className="relative rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200">
                 <div className="absolute right-5 top-5 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
                   Best Value
                 </div>
