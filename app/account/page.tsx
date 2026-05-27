@@ -3,6 +3,8 @@
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
+type AccountTab = "profile" | "subscription" | "billing" | "support" | "security";
+
 type AccountStatus = {
   isPro: boolean;
   canAnalyze: boolean;
@@ -11,9 +13,38 @@ type AccountStatus = {
   remainingSeconds?: number;
 };
 
+const tabs: { id: AccountTab; label: string; description: string }[] = [
+  {
+    id: "profile",
+    label: "Profile",
+    description: "Account identity and email details.",
+  },
+  {
+    id: "subscription",
+    label: "Subscription",
+    description: "Plan status and Pro access.",
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    description: "Invoices, payment method and billing portal.",
+  },
+  {
+    id: "support",
+    label: "Support",
+    description: "Help, contact and product support.",
+  },
+  {
+    id: "security",
+    label: "Security",
+    description: "Authentication and account protection.",
+  },
+];
+
 export default function AccountPage() {
   const { user, isSignedIn } = useUser();
 
+  const [activeTab, setActiveTab] = useState<AccountTab>("profile");
   const [status, setStatus] = useState<AccountStatus | null>(null);
   const [loadingPortal, setLoadingPortal] = useState(false);
 
@@ -77,6 +108,7 @@ export default function AccountPage() {
   }
 
   const email = user?.primaryEmailAddress?.emailAddress || "No email connected";
+  const currentTab = tabs.find((tab) => tab.id === activeTab);
 
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
@@ -104,154 +136,91 @@ export default function AccountPage() {
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+          <aside className="h-fit rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4">
+            <div className="mb-4 rounded-3xl border border-zinc-800 bg-black p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-600">
+                Signed in as
+              </p>
+
+              <p className="mt-3 truncate text-sm font-bold text-white">
+                {email}
+              </p>
+
+              <div
+                className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                  status?.isPro
+                    ? "bg-emerald-500/10 text-emerald-300"
+                    : "bg-zinc-800 text-zinc-400"
+                }`}
+              >
+                {status?.isPro ? "Pro Active" : "Free Plan"}
+              </div>
+            </div>
+
             <nav className="space-y-2">
-              <AccountNavItem label="Profile" active />
-              <AccountNavItem label="Subscription" />
-              <AccountNavItem label="Billing" />
-              <AccountNavItem label="Support" />
-              <AccountNavItem label="Security" />
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full rounded-2xl px-4 py-4 text-left transition ${
+                    activeTab === tab.id
+                      ? "bg-white text-black"
+                      : "text-zinc-400 hover:bg-black hover:text-white"
+                  }`}
+                >
+                  <p className="font-bold">{tab.label}</p>
+
+                  <p
+                    className={`mt-1 text-xs leading-5 ${
+                      activeTab === tab.id ? "text-zinc-700" : "text-zinc-600"
+                    }`}
+                  >
+                    {tab.description}
+                  </p>
+                </button>
+              ))}
             </nav>
           </aside>
 
-          <section className="grid gap-6">
-            <Card title="Profile">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InfoBox label="Email" value={email} />
-                <InfoBox
-                  label="Account ID"
-                  value={user?.id ? `${user.id.slice(0, 10)}...` : "N/A"}
-                />
-              </div>
-            </Card>
-
-            <Card title="Subscription">
-              <div className="grid gap-4 md:grid-cols-3">
-                <InfoBox
-                  label="Current Plan"
-                  value={status?.isPro ? "ChartSetup Pro" : "Free"}
-                />
-
-                <InfoBox
-                  label="Status"
-                  value={status?.isPro ? "Active" : "Free daily access"}
-                />
-
-                <InfoBox
-                  label="Usage"
-                  value={
-                    status?.isPro
-                      ? "Unlimited analyses"
-                      : status?.canAnalyze
-                      ? "1 free analysis available"
-                      : `Next free analysis in ${status?.remainingHours || 0}h ${
-                          status?.remainingMinutes || 0
-                        }m`
-                  }
-                />
-              </div>
-
-              <div className="mt-6 rounded-3xl border border-zinc-800 bg-black p-6">
-                <h3 className="text-2xl font-bold">
-                  {status?.isPro
-                    ? "Your Pro access is active."
-                    : "Upgrade to remove daily limits."}
-                </h3>
-
-                <p className="mt-3 leading-7 text-zinc-400">
-                  {status?.isPro
-                    ? "You have unlimited AI chart analyses, full history access, and priority processing."
-                    : "Free users receive one AI analysis every 24 hours. Pro unlocks unlimited chart analysis."}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {status?.isPro ? (
-                    <button
-                      onClick={openBillingPortal}
-                      disabled={loadingPortal}
-                      className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50"
-                    >
-                      {loadingPortal ? "Opening..." : "Manage Subscription"}
-                    </button>
-                  ) : (
-                    <a
-                      href="/"
-                      className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
-                    >
-                      View Pro Plans
-                    </a>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            <Card title="Billing">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InfoBox
-                  label="Invoices"
-                  value={
-                    status?.isPro
-                      ? "Available in billing portal"
-                      : "Available after subscribing"
-                  }
-                />
-
-                <InfoBox
-                  label="Payment Method"
-                  value={
-                    status?.isPro
-                      ? "Manage in Stripe billing portal"
-                      : "No active payment method"
-                  }
-                />
-              </div>
-
-              <button
-                onClick={openBillingPortal}
-                disabled={!status?.isPro || loadingPortal}
-                className="mt-5 rounded-2xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {loadingPortal ? "Opening..." : "Open Billing Portal"}
-              </button>
-            </Card>
-
-            <Card title="Support">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InfoBox
-                  label="Support Email"
-                  value="support@chartsetup.app"
-                />
-
-                <InfoBox
-                  label="Typical Response"
-                  value="Within 24–48 hours"
-                />
-              </div>
-
-              <div className="mt-5 rounded-3xl border border-zinc-800 bg-black p-6">
-                <h3 className="text-2xl font-bold">
-                  Need help with billing or analysis?
-                </h3>
-
-                <p className="mt-3 leading-7 text-zinc-400">
-                  Contact support for payment issues, account access, subscription
-                  questions, or product feedback.
-                </p>
-              </div>
-            </Card>
-
-            <Card title="Security">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InfoBox label="Authentication" value="Secured by Clerk" />
-                <InfoBox label="Payments" value="Processed securely by Stripe" />
-              </div>
-
-              <p className="mt-5 leading-7 text-zinc-500">
-                Profile, email, and security settings are handled through your
-                secure Clerk account menu.
+          <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-7">
+            <div className="mb-7 border-b border-zinc-800 pb-6">
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                {currentTab?.label}
               </p>
-            </Card>
+
+              <h2 className="text-4xl font-bold">
+                {getTabTitle(activeTab)}
+              </h2>
+
+              <p className="mt-3 max-w-2xl leading-7 text-zinc-400">
+                {getTabDescription(activeTab)}
+              </p>
+            </div>
+
+            {activeTab === "profile" && (
+              <ProfileTab email={email} userId={user?.id || "N/A"} />
+            )}
+
+            {activeTab === "subscription" && (
+              <SubscriptionTab
+                status={status}
+                onManageSubscription={openBillingPortal}
+                loadingPortal={loadingPortal}
+              />
+            )}
+
+            {activeTab === "billing" && (
+              <BillingTab
+                isPro={Boolean(status?.isPro)}
+                onOpenPortal={openBillingPortal}
+                loadingPortal={loadingPortal}
+              />
+            )}
+
+            {activeTab === "support" && <SupportTab />}
+
+            {activeTab === "security" && <SecurityTab />}
           </section>
         </div>
       </div>
@@ -259,50 +228,244 @@ export default function AccountPage() {
   );
 }
 
-function AccountNavItem({
-  label,
-  active = false,
-}: {
-  label: string;
-  active?: boolean;
-}) {
+function getTabTitle(tab: AccountTab) {
+  if (tab === "profile") return "Profile details";
+  if (tab === "subscription") return "Subscription access";
+  if (tab === "billing") return "Billing management";
+  if (tab === "support") return "Support center";
+  return "Security settings";
+}
+
+function getTabDescription(tab: AccountTab) {
+  if (tab === "profile") {
+    return "View your account identity and connected email address.";
+  }
+
+  if (tab === "subscription") {
+    return "Check your current plan, usage limits and Pro subscription status.";
+  }
+
+  if (tab === "billing") {
+    return "Manage invoices, payment method, subscription changes and cancellations through Stripe.";
+  }
+
+  if (tab === "support") {
+    return "Get help with billing, account access, product questions or analysis issues.";
+  }
+
+  return "Your authentication and account security are handled through Clerk.";
+}
+
+function ProfileTab({ email, userId }: { email: string; userId: string }) {
   return (
-    <div
-      className={`rounded-2xl px-4 py-3 text-sm font-bold ${
-        active
-          ? "bg-white text-black"
-          : "text-zinc-500 hover:bg-black hover:text-white"
-      }`}
-    >
-      {label}
+    <div className="grid gap-5 md:grid-cols-2">
+      <InfoCard label="Email Address" value={email} />
+      <InfoCard label="Account ID" value={`${userId.slice(0, 14)}...`} />
+
+      <div className="rounded-3xl border border-zinc-800 bg-black p-6 md:col-span-2">
+        <h3 className="text-2xl font-bold">Account profile</h3>
+
+        <p className="mt-3 leading-7 text-zinc-400">
+          Your profile, email address, connected accounts and authentication
+          settings are managed securely through Clerk.
+        </p>
+      </div>
     </div>
   );
 }
 
-function Card({
-  title,
-  children,
+function SubscriptionTab({
+  status,
+  onManageSubscription,
+  loadingPortal,
 }: {
-  title: string;
-  children: React.ReactNode;
+  status: AccountStatus | null;
+  onManageSubscription: () => void;
+  loadingPortal: boolean;
 }) {
+  const isPro = Boolean(status?.isPro);
+
   return (
-    <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-      <h2 className="text-3xl font-bold">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </section>
+    <div className="space-y-5">
+      <div className="grid gap-5 md:grid-cols-3">
+        <InfoCard
+          label="Current Plan"
+          value={isPro ? "ChartSetup Pro" : "Free"}
+        />
+
+        <InfoCard
+          label="Status"
+          value={isPro ? "Active" : "Daily free access"}
+        />
+
+        <InfoCard
+          label="Usage"
+          value={
+            isPro
+              ? "Unlimited analyses"
+              : status?.canAnalyze
+              ? "1 free analysis available"
+              : `Next free analysis in ${status?.remainingHours || 0}h ${
+                  status?.remainingMinutes || 0
+                }m`
+          }
+        />
+      </div>
+
+      <div
+        className={`rounded-3xl border p-7 ${
+          isPro
+            ? "border-emerald-500/30 bg-emerald-500/10"
+            : "border-zinc-800 bg-black"
+        }`}
+      >
+        <p
+          className={`mb-3 text-sm font-bold uppercase tracking-[0.25em] ${
+            isPro ? "text-emerald-300" : "text-zinc-500"
+          }`}
+        >
+          {isPro ? "Pro Active" : "Free Plan"}
+        </p>
+
+        <h3 className="text-3xl font-bold">
+          {isPro
+            ? "Unlimited analysis is active."
+            : "Upgrade to remove daily limits."}
+        </h3>
+
+        <p className="mt-4 max-w-2xl leading-8 text-zinc-400">
+          {isPro
+            ? "You can run unlimited AI chart analyses, access full history and use priority processing."
+            : "Free users receive one AI analysis every 24 hours. Pro unlocks unlimited chart analysis."}
+        </p>
+
+        <div className="mt-6">
+          {isPro ? (
+            <button
+              onClick={onManageSubscription}
+              disabled={loadingPortal}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50"
+            >
+              {loadingPortal ? "Opening..." : "Manage Subscription"}
+            </button>
+          ) : (
+            <a
+              href="/"
+              className="inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
+            >
+              View Pro Plans
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
-function InfoBox({
-  label,
-  value,
+function BillingTab({
+  isPro,
+  onOpenPortal,
+  loadingPortal,
 }: {
-  label: string;
-  value: string;
+  isPro: boolean;
+  onOpenPortal: () => void;
+  loadingPortal: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
+    <div className="space-y-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <InfoCard
+          label="Invoices"
+          value={isPro ? "Available in Stripe" : "No paid invoices yet"}
+        />
+
+        <InfoCard
+          label="Payment Method"
+          value={isPro ? "Manage in Stripe" : "No active payment method"}
+        />
+      </div>
+
+      <div className="rounded-3xl border border-zinc-800 bg-black p-7">
+        <h3 className="text-3xl font-bold">Stripe billing portal</h3>
+
+        <p className="mt-4 max-w-2xl leading-8 text-zinc-400">
+          Use the billing portal to update your card, switch plan, view invoices
+          or cancel your subscription.
+        </p>
+
+        <button
+          onClick={onOpenPortal}
+          disabled={!isPro || loadingPortal}
+          className="mt-6 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {loadingPortal ? "Opening..." : "Open Billing Portal"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SupportTab() {
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <InfoCard label="Support Email" value="support@chartsetup.app" />
+        <InfoCard label="Typical Response" value="Within 24–48 hours" />
+      </div>
+
+      <div className="rounded-3xl border border-zinc-800 bg-black p-7">
+        <h3 className="text-3xl font-bold">Need help?</h3>
+
+        <p className="mt-4 max-w-2xl leading-8 text-zinc-400">
+          Contact support for billing problems, subscription changes, account
+          access issues, product feedback or analysis-related problems.
+        </p>
+
+        <a
+          href="mailto:support@chartsetup.app"
+          className="mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
+        >
+          Contact Support
+        </a>
+      </div>
+
+      <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+        <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+          Important
+        </p>
+
+        <p className="mt-3 leading-7 text-zinc-400">
+          ChartSetup Analyzer is a decision-support tool. It does not provide
+          financial advice, guaranteed outcomes or trade signals.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SecurityTab() {
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <InfoCard label="Authentication" value="Secured by Clerk" />
+        <InfoCard label="Payments" value="Processed by Stripe" />
+      </div>
+
+      <div className="rounded-3xl border border-zinc-800 bg-black p-7">
+        <h3 className="text-3xl font-bold">Security controls</h3>
+
+        <p className="mt-4 max-w-2xl leading-8 text-zinc-400">
+          Email, login methods, connected accounts and account security are
+          managed through the secure Clerk account menu.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-3xl border border-zinc-800 bg-black p-6">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-600">
         {label}
       </p>
