@@ -14,24 +14,6 @@ type UploadedFiles = {
   m5: File | null;
 };
 
-type Analysis = {
-  overallBias: string;
-  tradeQuality: string;
-  marketState: string;
-  noTradeReason: string;
-  mostImportantThing: string;
-  keyLevels: string;
-  marketStructure: string;
-  bullishScenario: string;
-  bullishConditions: string;
-  bearishScenario: string;
-  bearishConditions: string;
-  bullishScore: number;
-  bearishScore: number;
-  scoreReason: string;
-  finalDecision: string;
-};
-
 const timeframes = [
   {
     key: "daily",
@@ -127,15 +109,15 @@ export default function Home() {
     "Intraday: 30 minutes–4 hours"
   );
 
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
-
   const [loading, setLoading] = useState(false);
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [canAnalyze, setCanAnalyze] = useState(true);
+
   const [remainingHours, setRemainingHours] = useState(0);
   const [remainingMinutes, setRemainingMinutes] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
 
   useEffect(() => {
     async function checkUsage() {
@@ -151,12 +133,40 @@ export default function Home() {
         if (!data.canAnalyze) {
           setRemainingHours(data.remainingHours || 0);
           setRemainingMinutes(data.remainingMinutes || 0);
+          setRemainingSeconds(data.remainingSeconds || 0);
         }
       } catch {}
     }
 
     checkUsage();
   }, []);
+
+  useEffect(() => {
+    if (canAnalyze) return;
+
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev > 0) return prev - 1;
+
+        if (remainingMinutes > 0) {
+          setRemainingMinutes((m) => m - 1);
+          return 59;
+        }
+
+        if (remainingHours > 0) {
+          setRemainingHours((h) => h - 1);
+          setRemainingMinutes(59);
+          return 59;
+        }
+
+        setCanAnalyze(true);
+
+        return 0;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [canAnalyze, remainingHours, remainingMinutes]);
 
   function handleFileChange(key: TimeframeKey, file: File | null) {
     setFiles((prev) => ({
@@ -218,16 +228,13 @@ export default function Home() {
         return;
       }
 
-      setAnalysis(data.analysis);
-
       setCanAnalyze(false);
+
       setRemainingHours(24);
       setRemainingMinutes(0);
+      setRemainingSeconds(0);
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      window.location.href = "/history";
     } catch {
       alert("Analysis failed.");
     } finally {
@@ -240,12 +247,21 @@ export default function Home() {
       <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6 flex items-center justify-between">
-            <a
-              href="/history"
-              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-            >
-              History
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href="/history"
+                className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+              >
+                History
+              </a>
+
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-500/20"
+              >
+                Upgrade
+              </button>
+            </div>
 
             {!isSignedIn ? (
               <div className="flex gap-3">
@@ -378,18 +394,18 @@ export default function Home() {
 
           <button
             onClick={handleAnalyze}
-            disabled={!canAnalyze || loading}
+            disabled={loading}
             className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition ${
               canAnalyze
                 ? "bg-white text-black hover:bg-zinc-200"
-                : "cursor-not-allowed bg-zinc-800 text-zinc-400"
+                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
             }`}
           >
             {loading
               ? "Analyzing..."
               : canAnalyze
               ? "Analyze Setup"
-              : `Next free analysis in ${remainingHours}h ${remainingMinutes}m`}
+              : `Next free analysis in ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s`}
           </button>
         </div>
       </main>
@@ -398,25 +414,25 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-7 shadow-2xl">
             <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-              DAILY LIMIT REACHED
+              CHARTSETUP PRO
             </p>
 
             <h2 className="text-3xl font-bold leading-tight">
-              Your free analysis has already been used today.
+              Unlimited AI market analysis.
             </h2>
 
             <p className="mt-4 leading-8 text-zinc-400">
-              Upgrade for unlimited AI analyses, full history access and
-              priority processing.
+              Remove the daily limit and access unlimited chart analyses,
+              full history and priority processing.
             </p>
 
             <div className="mt-6 grid gap-3">
               <button className="rounded-2xl bg-white px-5 py-4 text-lg font-bold text-black transition hover:bg-zinc-200">
-                Pro Weekly — €4.99
+                Weekly — €4.99
               </button>
 
               <button className="rounded-2xl border border-zinc-700 bg-black px-5 py-4 text-lg font-bold text-white transition hover:border-white">
-                Pro Monthly — €14.99
+                Monthly — €14.99
               </button>
             </div>
 
@@ -424,7 +440,7 @@ export default function Home() {
               onClick={() => setShowUpgradeModal(false)}
               className="mt-5 w-full rounded-2xl border border-zinc-800 px-5 py-3 text-sm font-bold text-zinc-400 transition hover:border-zinc-600 hover:text-white"
             >
-              Maybe Later
+              Close
             </button>
           </div>
         </div>
