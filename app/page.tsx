@@ -32,15 +32,6 @@ type Analysis = {
   finalDecision: string;
 };
 
-const loadingMessages = [
-  "Reading uploaded charts...",
-  "Checking timeframe alignment...",
-  "Detecting market state...",
-  "Evaluating liquidity context...",
-  "Building bullish and bearish scenarios...",
-  "Preparing final decision...",
-];
-
 const timeframes = [
   {
     key: "daily",
@@ -136,23 +127,36 @@ export default function Home() {
     "Intraday: 30 minutes–4 hours"
   );
 
-  const [loading, setLoading] = useState(false);
-  const [loadingIndex, setLoadingIndex] = useState(0);
-
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [showResults, setShowResults] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
+  const [canAnalyze, setCanAnalyze] = useState(true);
+  const [remainingHours, setRemainingHours] = useState(0);
+  const [remainingMinutes, setRemainingMinutes] = useState(0);
+
   useEffect(() => {
-    if (!loading) return;
+    async function checkUsage() {
+      try {
+        const response = await fetch("/api/usage");
 
-    const interval = setInterval(() => {
-      setLoadingIndex((prev) => (prev + 1) % loadingMessages.length);
-    }, 1800);
+        if (!response.ok) return;
 
-    return () => clearInterval(interval);
-  }, [loading]);
+        const data = await response.json();
+
+        setCanAnalyze(data.canAnalyze);
+
+        if (!data.canAnalyze) {
+          setRemainingHours(data.remainingHours || 0);
+          setRemainingMinutes(data.remainingMinutes || 0);
+        }
+      } catch {}
+    }
+
+    checkUsage();
+  }, []);
 
   function handleFileChange(key: TimeframeKey, file: File | null) {
     setFiles((prev) => ({
@@ -167,6 +171,11 @@ export default function Home() {
       return;
     }
 
+    if (!canAnalyze) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     const uploadedFiles = Object.entries(files).filter(
       ([, file]) => file !== null
     );
@@ -177,8 +186,6 @@ export default function Home() {
     }
 
     setLoading(true);
-    setLoadingIndex(0);
-    setAnalysis(null);
 
     const formData = new FormData();
 
@@ -202,6 +209,7 @@ export default function Home() {
 
       if (!response.ok) {
         if (data.code === "FREE_LIMIT_REACHED") {
+          setCanAnalyze(false);
           setShowUpgradeModal(true);
           return;
         }
@@ -211,7 +219,10 @@ export default function Home() {
       }
 
       setAnalysis(data.analysis);
-      setShowResults(true);
+
+      setCanAnalyze(false);
+      setRemainingHours(24);
+      setRemainingMinutes(0);
 
       window.scrollTo({
         top: 0,
@@ -367,9 +378,18 @@ export default function Home() {
 
           <button
             onClick={handleAnalyze}
-            className="mt-8 w-full rounded-2xl bg-white px-6 py-5 text-lg font-bold text-black transition hover:bg-zinc-200"
+            disabled={!canAnalyze || loading}
+            className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition ${
+              canAnalyze
+                ? "bg-white text-black hover:bg-zinc-200"
+                : "cursor-not-allowed bg-zinc-800 text-zinc-400"
+            }`}
           >
-            Analyze Setup
+            {loading
+              ? "Analyzing..."
+              : canAnalyze
+              ? "Analyze Setup"
+              : `Next free analysis in ${remainingHours}h ${remainingMinutes}m`}
           </button>
         </div>
       </main>
@@ -378,16 +398,16 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-7 shadow-2xl">
             <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-              Free Limit Reached
+              DAILY LIMIT REACHED
             </p>
 
-            <h2 className="text-3xl font-bold">
-              You already used your free daily analysis.
+            <h2 className="text-3xl font-bold leading-tight">
+              Your free analysis has already been used today.
             </h2>
 
             <p className="mt-4 leading-8 text-zinc-400">
-              Upgrade to Pro for unlimited chart analyses, full history and
-              priority AI processing.
+              Upgrade for unlimited AI analyses, full history access and
+              priority processing.
             </p>
 
             <div className="mt-6 grid gap-3">
