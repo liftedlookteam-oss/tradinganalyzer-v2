@@ -22,6 +22,7 @@ type Analysis = {
   bullishScore: number;
   bearishScore: number;
   finalDecision: string;
+chartAnnotations: string;
 };
 
 const loadingMessages = [
@@ -394,7 +395,16 @@ export default function Home() {
               value={analysis.marketStructure}
             />
           </section>
+<section className="mb-6 rounded-3xl border border-blue-500/40 bg-blue-500/10 p-7">
+  <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-blue-300">
+    Chart Annotation Notes
+  </p>
 
+  <p className="whitespace-pre-wrap text-lg leading-8 text-white">
+    {analysis.chartAnnotations ||
+      "No chart annotation notes available."}
+  </p>
+</section>
           <section className="mb-6 grid gap-6 lg:grid-cols-2">
             <ScenarioPanel
               type="bullish"
