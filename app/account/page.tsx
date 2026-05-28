@@ -208,6 +208,13 @@ export default function AccountPage() {
                 </button>
               ))}
             </nav>
+<SignOutButton redirectUrl="/">
+  <button
+    className="mt-8 w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
+  >
+    Sign Out
+  </button>
+</SignOutButton>
           </aside>
 
           <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-8">
