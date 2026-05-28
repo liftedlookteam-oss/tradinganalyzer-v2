@@ -22,6 +22,7 @@ type Analysis = {
   bullishScore: number;
   bearishScore: number;
   finalDecision: string;
+chartAnnotations: string;
 };
 
 const loadingMessages = [
@@ -385,21 +386,26 @@ export default function Home() {
             <TopMetric title="Trade Quality" value={analysis.tradeQuality} />
             <TopMetric title="Market State" value={analysis.marketState} />
             <TopMetric title="Trade Duration" value={tradeDuration} />
-          
+          </section>
 
           <section className="mb-6 grid gap-6 lg:grid-cols-2">
-  <SimpleCard
-    title="Key Levels"
-    value={analysis.keyLevels}
-  />
+            <SimpleCard title="Key Levels" value={analysis.keyLevels} />
+            <SimpleCard
+              title="Market Structure"
+              value={analysis.marketStructure}
+            />
+          </section>
+<section className="mb-6 rounded-3xl border border-blue-500/40 bg-blue-500/10 p-7">
+  <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-blue-300">
+    Chart Annotation Notes
+  </p>
 
-  <SimpleCard
-    title="Market Structure"
-    value={analysis.marketStructure}
-  />
+  <p className="whitespace-pre-wrap text-lg leading-8 text-white">
+    {analysis.chartAnnotations ||
+      "No chart annotation notes available."}
+  </p>
 </section>
-
-<section className="mb-6 grid gap-6 lg:grid-cols-2">
+          <section className="mb-6 grid gap-6 lg:grid-cols-2">
             <ScenarioPanel
               type="bullish"
               title="Bullish Scenario"
