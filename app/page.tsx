@@ -139,7 +139,7 @@ export default function Home() {
 
   const [isPro, setIsPro] = useState(false);
   const [usageLoaded, setUsageLoaded] = useState(false);
-  const [canAnalyze, setCanAnalyze] = useState(true);
+  const [canAnalyze, setCanAnalyze] = useState(false);
 
   const [remainingHours, setRemainingHours] = useState(0);
   const [remainingMinutes, setRemainingMinutes] = useState(0);
@@ -250,10 +250,10 @@ export default function Home() {
   }
 
   async function handleAnalyze() {
-    if (!isSignedIn) {
-      window.location.href = "/sign-in";
-      return;
-    }
+    if (!canAnalyze && !isPro) {
+  window.location.href = "/pricing";
+  return;
+}
 
     if (!canAnalyze && !isPro) {
       setShowUpgradeModal(true);
