@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 
 type TimeframeKey = "daily" | "h4" | "h2" | "h1" | "m15" | "m5";
 
@@ -137,7 +137,7 @@ export default function Home() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [isPro, setIsPro] = useState(false);
-
+  const [usageLoaded, setUsageLoaded] = useState(false);
   const [canAnalyze, setCanAnalyze] = useState(true);
 
   const [remainingHours, setRemainingHours] = useState(0);
@@ -163,7 +163,10 @@ export default function Home() {
           setRemainingMinutes(data.remainingMinutes || 0);
           setRemainingSeconds(data.remainingSeconds || 0);
         }
-      } catch {}
+      } catch {
+      } finally {
+        setUsageLoaded(true);
+      }
     }
 
     checkUsage();
@@ -176,9 +179,7 @@ export default function Home() {
 
     const interval = setInterval(() => {
       setLoadingIndex((prev) => {
-        if (analysisFinishedRef.current) {
-          return prev;
-        }
+        if (analysisFinishedRef.current) return prev;
 
         if (prev >= loadingMessages.length - 1) {
           return prev;
@@ -247,25 +248,6 @@ export default function Home() {
     }
   }
 
-  async function openBillingPortal() {
-    try {
-      const response = await fetch("/api/billing-portal", {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Billing portal failed.");
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch {
-      alert("Billing portal failed.");
-    }
-  }
-
   async function handleAnalyze() {
     if (!isSignedIn) {
       window.location.href = "/sign-in";
@@ -313,6 +295,8 @@ export default function Home() {
       analysisFinishedRef.current = true;
 
       if (!response.ok) {
+        setLoading(false);
+
         if (data.code === "FREE_LIMIT_REACHED") {
           setCanAnalyze(false);
           setShowUpgradeModal(true);
@@ -358,15 +342,10 @@ export default function Home() {
   }
 
   const uploadedCount = Object.values(files).filter(Boolean).length;
-
   const canClickAnalyze = uploadedCount >= 2 && !loading;
 
   if (loading) {
-    return (
-      <LoadingView
-        message={loadingMessages[loadingIndex]}
-      />
-    );
+    return <LoadingView message={loadingMessages[loadingIndex]} />;
   }
 
   if (showResults && analysis) {
@@ -402,33 +381,14 @@ export default function Home() {
           </div>
 
           <section className="mb-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            <TopMetric
-              title="Overall Bias"
-              value={analysis.overallBias}
-            />
-
-            <TopMetric
-              title="Trade Quality"
-              value={analysis.tradeQuality}
-            />
-
-            <TopMetric
-              title="Market State"
-              value={analysis.marketState}
-            />
-
-            <TopMetric
-              title="Trade Duration"
-              value={tradeDuration}
-            />
+            <TopMetric title="Overall Bias" value={analysis.overallBias} />
+            <TopMetric title="Trade Quality" value={analysis.tradeQuality} />
+            <TopMetric title="Market State" value={analysis.marketState} />
+            <TopMetric title="Trade Duration" value={tradeDuration} />
           </section>
 
           <section className="mb-6 grid gap-6 lg:grid-cols-2">
-            <SimpleCard
-              title="Key Levels"
-              value={analysis.keyLevels}
-            />
-
+            <SimpleCard title="Key Levels" value={analysis.keyLevels} />
             <SimpleCard
               title="Market Structure"
               value={analysis.marketStructure}
@@ -463,18 +423,17 @@ export default function Home() {
             </p>
           </section>
 
-          {analysis.tradeQuality === "No Trade" &&
-            analysis.noTradeReason && (
-              <section className="mb-6 rounded-3xl border border-red-500/40 bg-red-500/10 p-7">
-                <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-red-300">
-                  No Trade Reason
-                </p>
+          {analysis.tradeQuality === "No Trade" && analysis.noTradeReason && (
+            <section className="mb-6 rounded-3xl border border-red-500/40 bg-red-500/10 p-7">
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-red-300">
+                No Trade Reason
+              </p>
 
-                <p className="text-2xl font-bold leading-tight text-white">
-                  {analysis.noTradeReason}
-                </p>
-              </section>
-            )}
+              <p className="text-2xl font-bold leading-tight text-white">
+                {analysis.noTradeReason}
+              </p>
+            </section>
+          )}
 
           <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
             <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
@@ -503,19 +462,21 @@ export default function Home() {
             </a>
 
             <div className="flex items-center gap-3">
-              {isPro ? (
-                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300">
-  Pro Active
-</div>
+              {usageLoaded ? (
+                isPro ? (
+                  <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300">
+                    Pro Active
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
+                  >
+                    Upgrade
+                  </button>
+                )
               ) : (
-                <button
-                  onClick={() =>
-                    setShowUpgradeModal(true)
-                  }
-                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
-                >
-                  Upgrade
-                </button>
+                <div className="h-[46px] w-[110px] rounded-2xl border border-zinc-800 bg-zinc-950" />
               )}
 
               {!isSignedIn ? (
@@ -536,11 +497,11 @@ export default function Home() {
                 </div>
               ) : (
                 <a
-  href="/account"
-  className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
->
-  Account
-</a>
+                  href="/account"
+                  className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+                >
+                  Account
+                </a>
               )}
             </div>
           </header>
@@ -557,16 +518,21 @@ export default function Home() {
                 </h1>
 
                 <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-400">
-                  Upload your chart screenshots by
-                  timeframe and choose how long you
-                  plan to hold the trade.
+                  Upload your chart screenshots by timeframe and choose how long
+                  you plan to hold the trade. The analysis adapts to your trade
+                  duration instead of giving a generic market overview.
+                </p>
+
+                <p className="mt-4 text-sm text-zinc-500">
+                  This tool does not provide blind buy or sell signals. It helps
+                  structure market context, scenarios, invalidation and risk.
                 </p>
               </div>
 
               <div className="flex items-center justify-center">
                 <img
                   src="/logo.png"
-                  alt="Logo"
+                  alt="Chart Setup Analyzer logo"
                   className="max-h-[340px] w-full object-contain"
                 />
               </div>
@@ -581,46 +547,57 @@ export default function Home() {
                 </h2>
 
                 <p className="mt-2 text-zinc-400">
-                  Upload at least 2 timeframes to run
-                  the analysis.
+                  Upload at least 2 timeframes to run the analysis. More uploads
+                  usually mean a higher-quality result.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2 md:justify-end">
-                {markets.map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => setMarket(item)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      market === item
-                        ? "bg-white text-black"
-                        : "bg-black text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-3 md:items-end">
+                <div className="rounded-2xl bg-black px-5 py-3 text-sm text-zinc-300">
+                  {uploadedCount}/6 timeframes uploaded
+                </div>
+
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  {markets.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setMarket(item)}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        market === item
+                          ? "bg-white text-black"
+                          : "bg-black text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
 
           <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold">Planned Trade Duration</h2>
+
+              <p className="mt-2 text-zinc-400">
+                This tells the AI whether to prioritize lower timeframes for
+                scalping or higher timeframes for swing/position trades.
+              </p>
+            </div>
+
             <div className="grid gap-3 md:grid-cols-5">
               {tradeDurations.map((item) => (
                 <button
                   key={item.value}
-                  onClick={() =>
-                    setTradeDuration(item.value)
-                  }
+                  onClick={() => setTradeDuration(item.value)}
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     tradeDuration === item.value
                       ? "border-white bg-white text-black"
                       : "border-zinc-800 bg-black text-zinc-300 hover:border-zinc-500"
                   }`}
                 >
-                  <p className="font-bold">
-                    {item.label}
-                  </p>
+                  <p className="font-bold">{item.label}</p>
 
                   <p
                     className={`mt-1 text-sm ${
@@ -639,9 +616,7 @@ export default function Home() {
           <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
             <input
               value={instrument}
-              onChange={(event) =>
-                setInstrument(event.target.value)
-              }
+              onChange={(event) => setInstrument(event.target.value)}
               placeholder="Instrument / Pair / Ticker (optional) — e.g. EURUSD, AAPL, GOLD, NAS100"
               className="w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white"
             />
@@ -654,12 +629,7 @@ export default function Home() {
                 title={timeframe.title}
                 description={timeframe.description}
                 file={files[timeframe.key]}
-                onChange={(file) =>
-                  handleFileChange(
-                    timeframe.key,
-                    file
-                  )
-                }
+                onChange={(file) => handleFileChange(timeframe.key, file)}
               />
             ))}
           </section>
@@ -667,7 +637,7 @@ export default function Home() {
           <button
             onClick={handleAnalyze}
             disabled={!canClickAnalyze}
-            className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition ${
+            className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
               canAnalyze || isPro
                 ? "bg-white text-black hover:bg-zinc-200"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -684,15 +654,9 @@ export default function Home() {
 
       {showUpgradeModal && !isPro && (
         <UpgradeModal
-          onClose={() =>
-            setShowUpgradeModal(false)
-          }
-          onWeekly={() =>
-            startCheckout("weekly")
-          }
-          onMonthly={() =>
-            startCheckout("monthly")
-          }
+          onClose={() => setShowUpgradeModal(false)}
+          onWeekly={() => startCheckout("weekly")}
+          onMonthly={() => startCheckout("monthly")}
         />
       )}
     </>
@@ -723,9 +687,8 @@ function UpgradeModal({
           </h2>
 
           <p className="mt-4 max-w-xl leading-8 text-zinc-400">
-            Upgrade to unlock unlimited AI chart
-            analyses, complete history access, and
-            priority processing.
+            Upgrade to unlock unlimited AI chart analyses, complete history
+            access, and priority processing.
           </p>
         </div>
 
@@ -739,19 +702,13 @@ function UpgradeModal({
             </p>
 
             <div className="mt-4 flex items-end gap-2">
-              <p className="text-4xl font-bold">
-                €4.99
-              </p>
-
-              <p className="mb-1 text-zinc-600">
-                / week
-              </p>
+              <p className="text-4xl font-bold">€4.99</p>
+              <p className="mb-1 text-zinc-600">/ week</p>
             </div>
 
             <p className="mt-4 leading-7 text-zinc-700">
-              Flexible access for traders who want
-              unlimited analysis without a monthly
-              commitment.
+              Flexible access for traders who want unlimited analysis without a
+              monthly commitment.
             </p>
 
             <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-center font-bold text-white">
@@ -772,18 +729,12 @@ function UpgradeModal({
             </p>
 
             <div className="mt-4 flex items-end gap-2">
-              <p className="text-4xl font-bold">
-                €14.99
-              </p>
-
-              <p className="mb-1 text-zinc-600">
-                / month
-              </p>
+              <p className="text-4xl font-bold">€14.99</p>
+              <p className="mb-1 text-zinc-600">/ month</p>
             </div>
 
             <p className="mt-4 leading-7 text-zinc-700">
-              Best for active traders who analyze
-              setups regularly.
+              Best for active traders who analyze setups regularly.
             </p>
 
             <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-center font-bold text-white">
@@ -805,11 +756,7 @@ function UpgradeModal({
   );
 }
 
-function LoadingView({
-  message,
-}: {
-  message: string;
-}) {
+function LoadingView({ message }: { message: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
       <section className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
@@ -817,22 +764,16 @@ function LoadingView({
           Analysis Running
         </p>
 
-        <h1 className="text-4xl font-bold">
-          Analyzing your setup
-        </h1>
+        <h1 className="text-4xl font-bold">Analyzing your setup</h1>
 
         <p className="mt-4 text-lg text-zinc-400">
-          Do not close this page. Your chart context
-          is being processed.
+          Do not close this page. Your chart context is being processed.
         </p>
 
         <div className="mt-8 space-y-4">
           {loadingMessages.map((item, index) => {
             const active = item === message;
-
-            const completed =
-              loadingMessages.indexOf(message) >
-              index;
+            const completed = loadingMessages.indexOf(message) > index;
 
             return (
               <div
@@ -857,9 +798,7 @@ function LoadingView({
                   {completed ? "✓" : index + 1}
                 </div>
 
-                <p className="font-semibold">
-                  {item}
-                </p>
+                <p className="font-semibold">{item}</p>
               </div>
             );
           })}
@@ -880,9 +819,7 @@ function UploadBox({
   file: File | null;
   onChange: (file: File | null) => void;
 }) {
-  const previewUrl = file
-    ? URL.createObjectURL(file)
-    : null;
+  const previewUrl = file ? URL.createObjectURL(file) : null;
 
   return (
     <label className="flex min-h-[260px] cursor-pointer flex-col justify-between rounded-3xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-5 transition hover:border-white hover:bg-zinc-900">
@@ -890,9 +827,7 @@ function UploadBox({
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) =>
-          onChange(e.target.files?.[0] || null)
-        }
+        onChange={(e) => onChange(e.target.files?.[0] || null)}
       />
 
       <div>
@@ -908,56 +843,34 @@ function UploadBox({
           </div>
         )}
 
-        <h3 className="text-xl font-bold">
-          {title}
-        </h3>
+        <h3 className="text-xl font-bold">{title}</h3>
 
-        <p className="mt-3 text-sm leading-6 text-zinc-500">
-          {description}
-        </p>
+        <p className="mt-3 text-sm leading-6 text-zinc-500">{description}</p>
       </div>
 
       <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-sm text-zinc-500">
-        {file
-          ? "Click to replace image"
-          : "Click to upload"}
+        {file ? "Click to replace image" : "Click to upload"}
       </div>
     </label>
   );
 }
 
-function TopMetric({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
+function TopMetric({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
       <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
         {title}
       </p>
 
-      <p className="mt-3 text-2xl font-bold">
-        {value || "N/A"}
-      </p>
+      <p className="mt-3 text-2xl font-bold">{value || "N/A"}</p>
     </div>
   );
 }
 
-function SimpleCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
+function SimpleCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-      <h2 className="text-2xl font-bold">
-        {title}
-      </h2>
+      <h2 className="text-2xl font-bold">{title}</h2>
 
       <p className="mt-4 whitespace-pre-wrap leading-8 text-zinc-300">
         {value || "N/A"}
@@ -979,11 +892,7 @@ function ScenarioPanel({
   conditions: string;
   score: number;
 }) {
-  const safeScore = Math.max(
-    0,
-    Math.min(100, Number(score) || 0)
-  );
-
+  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
   const isBullish = type === "bullish";
 
   return (
@@ -994,9 +903,7 @@ function ScenarioPanel({
           : "border-red-600/70 bg-red-900/35"
       }`}
     >
-      <h2 className="text-3xl font-bold">
-        {title}
-      </h2>
+      <h2 className="text-3xl font-bold">{title}</h2>
 
       <div className="mt-6 rounded-2xl bg-black/50 p-5">
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
@@ -1020,21 +927,15 @@ function ScenarioPanel({
 
       <div className="mt-6 rounded-2xl bg-black/60 p-5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="font-bold">
-            Probability Score
-          </p>
+          <p className="font-bold">Probability Score</p>
 
-          <p className="text-2xl font-bold">
-            {safeScore}/100
-          </p>
+          <p className="text-2xl font-bold">{safeScore}/100</p>
         </div>
 
         <div className="relative h-4 rounded-full bg-zinc-800">
           <div
             className="absolute left-0 top-0 h-4 rounded-full bg-white"
-            style={{
-              width: `${safeScore}%`,
-            }}
+            style={{ width: `${safeScore}%` }}
           />
         </div>
       </div>
