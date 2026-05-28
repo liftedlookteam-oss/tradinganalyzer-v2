@@ -646,7 +646,7 @@ export default function Home() {
 
           <button
             onClick={handleAnalyze}
-           disabled={uploadedCount < 2}
+           disabled={(isPro || canAnalyze) && uploadedCount < 2}
             className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
               canAnalyze || isPro
                 ? "bg-white text-black hover:bg-zinc-200"

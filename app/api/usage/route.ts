@@ -15,10 +15,14 @@ function getRemainingTime(lastUsed: string) {
   const minutes = Math.floor(
     (remaining % (1000 * 60 * 60)) / (1000 * 60)
   );
+const seconds = Math.floor(
+  (remaining % (1000 * 60)) / 1000
+);
 
   return {
     hours,
     minutes,
+seconds,
     totalMs: remaining,
   };
 }
@@ -81,6 +85,7 @@ export async function GET() {
       isPro: false,
       remainingHours: remaining.hours,
       remainingMinutes: remaining.minutes,
+remainingSeconds: remaining.seconds,
     });
   } catch (error) {
     return Response.json(
