@@ -22,6 +22,15 @@ type Analysis = {
   bullishScore: number;
   bearishScore: number;
   finalDecision: string;
+htfBias: string;
+executionBias: string;
+liquidityContext: string;
+invalidation: string;
+noTradeConditions: string;
+patienceRating: string;
+confidenceScore: number;
+executionQuality: string;
+scoreReason: string;
 };
 
 const loadingMessages = [
