@@ -649,6 +649,29 @@ export default function Home() {
                 : "Upload at least 2 timeframes to analyze"
               : `Next free analysis in ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s`}
           </button>
+<footer className="mt-12 border-t border-zinc-900 pt-6 text-center text-sm text-zinc-600">
+  <div className="flex flex-wrap justify-center gap-5">
+    <a href="/pricing" className="hover:text-white">
+      Pricing
+    </a>
+    <a href="/terms" className="hover:text-white">
+      Terms
+    </a>
+    <a href="/privacy" className="hover:text-white">
+      Privacy
+    </a>
+    <a href="/disclaimer" className="hover:text-white">
+      Risk Disclaimer
+    </a>
+    <a href="mailto:support@chartsetup.app" className="hover:text-white">
+      Contact
+    </a>
+  </div>
+
+  <p className="mt-4">
+    © 2026 ChartSetup Analyzer. Decision-support only. Not financial advice.
+  </p>
+</footer>
         </div>
       </main>
 
@@ -804,29 +827,6 @@ function LoadingView({ message }: { message: string }) {
           })}
         </div>
       </section>
-<footer className="mt-12 border-t border-zinc-900 pt-6 text-center text-sm text-zinc-600">
-  <div className="flex flex-wrap justify-center gap-5">
-    <a href="/pricing" className="hover:text-white">
-      Pricing
-    </a>
-    <a href="/terms" className="hover:text-white">
-      Terms
-    </a>
-    <a href="/privacy" className="hover:text-white">
-      Privacy
-    </a>
-    <a href="/disclaimer" className="hover:text-white">
-      Risk Disclaimer
-    </a>
-    <a href="mailto:support@chartsetup.app" className="hover:text-white">
-      Contact
-    </a>
-  </div>
-
-  <p className="mt-4">
-    © 2026 ChartSetup Analyzer. Decision-support only. Not financial advice.
-  </p>
-</footer>
     </main>
   );
 }
