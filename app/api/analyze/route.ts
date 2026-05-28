@@ -30,6 +30,23 @@ function cleanAnalysis(rawAnalysis: any) {
     tradeQuality: rawAnalysis?.tradeQuality || "No Trade",
     marketState: rawAnalysis?.marketState || "Unclear",
     noTradeReason: rawAnalysis?.noTradeReason || "",
+
+    htfBias: rawAnalysis?.htfBias || "Unclear",
+    executionBias: rawAnalysis?.executionBias || "Wait",
+    liquidityContext:
+      rawAnalysis?.liquidityContext || "Liquidity context is unclear.",
+    invalidation:
+      rawAnalysis?.invalidation ||
+      "No clear invalidation level or condition identified.",
+    noTradeConditions:
+      rawAnalysis?.noTradeConditions ||
+      "No specific no-trade conditions identified.",
+    patienceRating:
+      rawAnalysis?.patienceRating || "Wait for confirmation",
+    confidenceScore: normalizeScore(rawAnalysis?.confidenceScore),
+    executionQuality:
+      rawAnalysis?.executionQuality || "Not suitable for execution yet.",
+
     mostImportantThing:
       rawAnalysis?.mostImportantThing || "No clear priority identified.",
     keyLevels: rawAnalysis?.keyLevels || "No clear levels identified.",
@@ -143,8 +160,8 @@ The user uploaded multiple chart screenshots from different timeframes.
 Use the instrument only as extra context. The screenshots are the primary source of truth.
 If no instrument is provided, analyze normally without guessing the instrument.
 
-Your job:
-Give a practical, disciplined, market-state-based analysis. The user needs to understand what condition the market is in right now and whether there is a clear edge.
+Your role:
+Give a strict, practical, disciplined market analysis. Your job is not to predict. Your job is to determine whether the setup has a clear edge.
 
 Do NOT give blind trade signals.
 
@@ -152,15 +169,17 @@ Strict language rules:
 - Never say "buy now", "sell now", "enter now", "go long now", or "go short now".
 - Do not give financial advice.
 - Do not pretend certainty.
-- You may say:
-  - "Bullish scenario is valid only if..."
-  - "Bearish scenario is valid only if..."
-  - "Wait for confirmation..."
-  - "No trade because..."
-- If setup is unclear, say No Trade clearly.
+- Prefer conditional language.
+- If the setup is weak or unclear, say WAIT or NO TRADE clearly.
+
+Decision discipline:
+- Most chart situations should NOT be treated as immediate execution.
+- "Wait" and "No Trade" are valid professional outcomes.
+- Do not force a bullish or bearish trade idea if confirmation is missing.
+- If the market is choppy, late in the move, mixed across timeframes, or trading directly into support/resistance, tradeQuality must be "No Trade" or "Bad".
 
 Market state classification:
-You must classify the marketState as exactly one of:
+You must classify marketState as exactly one of:
 - Trending
 - Ranging
 - Pullback
@@ -169,11 +188,6 @@ You must classify the marketState as exactly one of:
 - Choppy / No edge
 - Unclear
 
-No-trade discipline:
-- If price is in chop, unclear range, late move, mixed timeframe conflict, or directly into nearby support/resistance, tradeQuality should be "No Trade" or "Bad".
-- If tradeQuality is "No Trade", noTradeReason must explain the exact reason.
-- If tradeQuality is not "No Trade", noTradeReason can be empty.
-
 Timeframe priority:
 - Scalp: prioritize 5M, 15M, 1H. Higher timeframes only matter if they show immediate major support/resistance.
 - Intraday: prioritize 15M, 1H, 4H.
@@ -181,15 +195,25 @@ Timeframe priority:
 - Swing: prioritize 4H and Daily.
 - Position: prioritize Daily and 4H.
 
+Professional analysis requirements:
+You must explicitly assess:
+- Higher timeframe bias
+- Execution timeframe bias
+- Liquidity context
+- Invalidation condition
+- No-trade conditions
+- Patience rating
+- Confidence score
+- Execution quality
+
 Score rules:
 - Scores are from 0 to 100.
 - Never use 0–10 scale.
-- If you write Good, at least one scenario score should usually be above 60.
-- If both scenario scores are below 40, tradeQuality must be Bad or No Trade.
-- Scores above 75 should be rare and require strong alignment across relevant timeframes.
-- If the setup is mixed, both scores should usually stay between 35 and 65.
+- Scores above 75 should be rare and require strong timeframe alignment.
+- If setup is mixed, keep scores between 35 and 65.
+- If both bullishScore and bearishScore are below 40, tradeQuality must be Bad or No Trade.
+- confidenceScore should reflect total clarity, not just direction.
 - Bullish and bearish scores do not need to add to 100.
-- Scores must match your written analysis.
 
 Output style:
 - Specific.
@@ -197,6 +221,7 @@ Output style:
 - Practical.
 - No generic textbook explanations.
 - Prefer conditions over predictions.
+- Speak like a strict trading mentor.
 
 Return ONLY valid JSON in this exact structure:
 
@@ -205,6 +230,16 @@ Return ONLY valid JSON in this exact structure:
   "tradeQuality": "Bad | Moderate | Good | No Trade",
   "marketState": "Trending | Ranging | Pullback | Breakout | Reversal attempt | Choppy / No edge | Unclear",
   "noTradeReason": "",
+
+  "htfBias": "",
+  "executionBias": "Bullish | Bearish | Neutral | Wait | No Trade",
+  "liquidityContext": "",
+  "invalidation": "",
+  "noTradeConditions": "",
+  "patienceRating": "Immediate | Wait for confirmation | Be patient | No trade",
+  "confidenceScore": 0,
+  "executionQuality": "",
+
   "mostImportantThing": "",
   "keyLevels": "",
   "marketStructure": "",
@@ -217,6 +252,17 @@ Return ONLY valid JSON in this exact structure:
   "scoreReason": "",
   "finalDecision": ""
 }
+
+Field rules:
+- htfBias: higher timeframe directional context.
+- executionBias: what lower/execution timeframes suggest.
+- liquidityContext: where liquidity likely sits and whether price is close to a trap zone.
+- invalidation: what would make the current idea invalid.
+- noTradeConditions: exact conditions where user should stay out.
+- patienceRating: one of the allowed patience labels.
+- confidenceScore: 0–100 clarity score.
+- executionQuality: whether conditions are good enough for execution or not.
+- finalDecision: strict, cautious and actionable.
 `,
       },
     ];
@@ -254,6 +300,14 @@ Return ONLY valid JSON in this exact structure:
         marketState: "Unclear",
         noTradeReason:
           "The AI response could not be parsed clearly, so the setup should be treated as no trade.",
+        htfBias: "Unclear",
+        executionBias: "No Trade",
+        liquidityContext: "No reliable liquidity context could be extracted.",
+        invalidation: "No reliable invalidation condition could be extracted.",
+        noTradeConditions: "Do not trade because the analysis could not be parsed reliably.",
+        patienceRating: "No trade",
+        confidenceScore: 0,
+        executionQuality: "Not suitable for execution.",
         mostImportantThing:
           "The AI response could not be parsed clearly, so this should be treated as no trade.",
         keyLevels: "No reliable key levels could be extracted.",
