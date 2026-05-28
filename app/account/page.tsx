@@ -317,7 +317,7 @@ export default function AccountPage() {
                       </button>
                     ) : (
                       <a
-                        href="/"
+                        href="/pricing"
                         className="inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
                       >
                         View Plans
