@@ -463,7 +463,7 @@ export default function Home() {
 
             <div className="flex items-center gap-3">
               {usageLoaded ? (
-                {isPro ? (
+                isPro ? (
   <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300">
     Pro Active
   </div>
@@ -474,7 +474,7 @@ export default function Home() {
   >
     Upgrade
   </a>
-)}
+)
               ) : (
                 <div className="h-[46px] w-[110px] rounded-2xl border border-zinc-800 bg-zinc-950" />
               )}
