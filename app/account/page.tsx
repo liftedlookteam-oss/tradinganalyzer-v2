@@ -1,12 +1,6 @@
 "use client";
 
-import { <SignOutButton>
-  <button
-    className="mt-8 w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
-  >
-    Sign Out
-  </button>
-</SignOutButton> } from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 type AccountTab =
