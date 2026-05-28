@@ -22,7 +22,6 @@ type Analysis = {
   bullishScore: number;
   bearishScore: number;
   finalDecision: string;
-chartAnnotations: string;
 };
 
 const loadingMessages = [
