@@ -1,6 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { <SignOutButton>
+  <button
+    className="mt-8 w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
+  >
+    Sign Out
+  </button>
+</SignOutButton> } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 type AccountTab =
@@ -172,6 +178,14 @@ export default function AccountPage() {
             </div>
 
             <nav className="space-y-2">
+<form action="/sign-out" method="post" className="mt-8">
+  <button
+    type="submit"
+    className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
+  >
+    Sign Out
+  </button>
+</form>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
