@@ -504,12 +504,9 @@ export default function Home() {
 
             <div className="flex items-center gap-3">
               {isPro ? (
-                <button
-                  onClick={openBillingPortal}
-                  className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-500/20"
-                >
-                  Pro Active
-                </button>
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-bold text-emerald-300">
+  Pro Active
+</div>
               ) : (
                 <button
                   onClick={() =>
@@ -645,7 +642,7 @@ export default function Home() {
               onChange={(event) =>
                 setInstrument(event.target.value)
               }
-              placeholder="Instrument / Pair / Ticker (optional)"
+              placeholder="Instrument / Pair / Ticker (optional) — e.g. EURUSD, AAPL, GOLD, NAS100"
               className="w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white"
             />
           </section>
