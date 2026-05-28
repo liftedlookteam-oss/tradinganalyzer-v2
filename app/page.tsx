@@ -22,15 +22,6 @@ type Analysis = {
   bullishScore: number;
   bearishScore: number;
   finalDecision: string;
-htfBias: string;
-executionBias: string;
-liquidityContext: string;
-invalidation: string;
-noTradeConditions: string;
-patienceRating: string;
-confidenceScore: number;
-executionQuality: string;
-scoreReason: string;
 };
 
 const loadingMessages = [
@@ -358,194 +349,105 @@ export default function Home() {
   }
 
   if (showResults && analysis) {
-  return (
-    <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
-              Analysis Result
-            </p>
-
-            <h1 className="text-4xl font-bold">
-              Trading Decision Dashboard
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="/history"
-              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-            >
-              History
-            </a>
-
-            <button
-              onClick={handleNewAnalysis}
-              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"
-            >
-              New Analysis
-            </button>
-          </div>
-        </div>
-
-        {/* TOP STATUS */}
-        <section className="mb-6 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-          <TopMetric
-            title="HTF Bias"
-            value={analysis.htfBias || analysis.overallBias}
-          />
-
-          <TopMetric
-            title="Execution Bias"
-            value={analysis.executionBias}
-          />
-
-          <TopMetric
-            title="Market State"
-            value={analysis.marketState}
-          />
-
-          <TopMetric
-            title="Trade Quality"
-            value={analysis.tradeQuality}
-          />
-
-          <TopMetric
-            title="Patience"
-            value={analysis.patienceRating}
-          />
-        </section>
-
-        {/* CONFIDENCE */}
-        <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
-          <div className="mb-5 flex items-center justify-between">
+    return (
+      <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-                Confidence Score
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
+                Analysis Result
               </p>
 
-              <h2 className="mt-2 text-4xl font-bold">
-                {analysis.confidenceScore || 0}/100
-              </h2>
+              <h1 className="text-4xl font-bold">
+                Trade Decision Dashboard
+              </h1>
             </div>
 
-            <div className="rounded-2xl bg-black px-5 py-3 text-sm font-bold text-zinc-300">
-              {analysis.executionQuality}
+            <div className="flex items-center gap-3">
+              <a
+                href="/history"
+                className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+              >
+                History
+              </a>
+
+              <button
+                onClick={handleNewAnalysis}
+                className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+              >
+                New Analysis
+              </button>
             </div>
           </div>
 
-          <div className="relative h-5 rounded-full bg-zinc-800">
-            <div
-              className="absolute left-0 top-0 h-5 rounded-full bg-white"
-              style={{
-                width: `${Math.max(
-                  0,
-                  Math.min(
-                    100,
-                    analysis.confidenceScore || 0
-                  )
-                )}%`,
-              }}
+          <section className="mb-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            <TopMetric title="Overall Bias" value={analysis.overallBias} />
+            <TopMetric title="Trade Quality" value={analysis.tradeQuality} />
+            <TopMetric title="Market State" value={analysis.marketState} />
+            <TopMetric title="Trade Duration" value={tradeDuration} />
+          </section>
+
+          <section className="mb-6 grid gap-6 lg:grid-cols-2">
+            <SimpleCard title="Key Levels" value={analysis.keyLevels} />
+            <SimpleCard
+              title="Market Structure"
+              value={analysis.marketStructure}
             />
-          </div>
-        </section>
+          </section>
 
-        {/* MOST IMPORTANT */}
-        <section className="mb-6 rounded-3xl border border-yellow-500/40 bg-yellow-500/10 p-7">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-yellow-300">
-            Most Important Thing Right Now
-          </p>
+          <section className="mb-6 grid gap-6 lg:grid-cols-2">
+            <ScenarioPanel
+              type="bullish"
+              title="Bullish Scenario"
+              scenario={analysis.bullishScenario}
+              conditions={analysis.bullishConditions}
+              score={analysis.bullishScore}
+            />
 
-          <p className="text-3xl font-bold leading-tight text-white">
-            {analysis.mostImportantThing}
-          </p>
-        </section>
+            <ScenarioPanel
+              type="bearish"
+              title="Bearish Scenario"
+              scenario={analysis.bearishScenario}
+              conditions={analysis.bearishConditions}
+              score={analysis.bearishScore}
+            />
+          </section>
 
-        {/* MARKET STRUCTURE */}
-        <section className="mb-6 grid gap-6 lg:grid-cols-2">
-          <SimpleCard
-            title="Market Structure"
-            value={analysis.marketStructure}
-          />
+          <section className="mb-6 rounded-3xl border border-yellow-500/40 bg-yellow-500/10 p-7">
+            <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-yellow-300">
+              Most Important Thing Right Now
+            </p>
 
-          <SimpleCard
-            title="Liquidity Context"
-            value={analysis.liquidityContext}
-          />
-        </section>
+            <p className="text-2xl font-bold leading-tight text-white">
+              {analysis.mostImportantThing}
+            </p>
+          </section>
 
-        {/* KEY LEVELS + INVALIDATION */}
-        <section className="mb-6 grid gap-6 lg:grid-cols-2">
-          <SimpleCard
-            title="Key Levels"
-            value={analysis.keyLevels}
-          />
+          {analysis.tradeQuality === "No Trade" && analysis.noTradeReason && (
+            <section className="mb-6 rounded-3xl border border-red-500/40 bg-red-500/10 p-7">
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-red-300">
+                No Trade Reason
+              </p>
 
-          <SimpleCard
-            title="Invalidation"
-            value={analysis.invalidation}
-          />
-        </section>
+              <p className="text-2xl font-bold leading-tight text-white">
+                {analysis.noTradeReason}
+              </p>
+            </section>
+          )}
 
-        {/* SCENARIOS */}
-        <section className="mb-6 grid gap-6 lg:grid-cols-2">
-          <ScenarioPanel
-            type="bullish"
-            title="Bullish Scenario"
-            scenario={analysis.bullishScenario}
-            conditions={analysis.bullishConditions}
-            score={analysis.bullishScore}
-          />
+          <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
+            <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+              Final Decision
+            </p>
 
-          <ScenarioPanel
-            type="bearish"
-            title="Bearish Scenario"
-            scenario={analysis.bearishScenario}
-            conditions={analysis.bearishConditions}
-            score={analysis.bearishScore}
-          />
-        </section>
-
-        {/* NO TRADE */}
-        <section className="mb-6 rounded-3xl border border-red-500/40 bg-red-500/10 p-7">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-red-300">
-            No Trade Conditions
-          </p>
-
-          <p className="text-lg leading-8 text-white">
-            {analysis.noTradeConditions ||
-              analysis.noTradeReason ||
-              "No specific no-trade conditions identified."}
-          </p>
-        </section>
-
-        {/* SCORE REASON */}
-        <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-7">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-            Score Reasoning
-          </p>
-
-          <p className="text-lg leading-8 text-zinc-300">
-            {analysis.scoreReason ||
-              "No score reasoning provided."}
-          </p>
-        </section>
-
-        {/* FINAL DECISION */}
-        <section className="rounded-3xl border border-white bg-white p-8 text-black">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
-            Final Decision
-          </p>
-
-          <p className="text-3xl font-bold leading-tight">
-            {analysis.finalDecision}
-          </p>
-        </section>
-      </div>
-    </main>
-  );
-}
+            <p className="text-2xl font-bold leading-tight text-white">
+              {analysis.finalDecision}
+            </p>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>
