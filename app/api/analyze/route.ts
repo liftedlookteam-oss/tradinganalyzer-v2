@@ -56,9 +56,6 @@ function cleanAnalysis(rawAnalysis: any) {
     executionQuality:
       rawAnalysis?.executionQuality ||
       "Execution quality is unclear.",
-chartAnnotations:
-  rawAnalysis?.chartAnnotations ||
-  "No clear chart annotation plan available.",
 
     mostImportantThing:
       rawAnalysis?.mostImportantThing ||
@@ -294,14 +291,7 @@ IMPORTANT:
 - If both bullish and bearish cases are weak, keep both scores low.
 - Scores above 75 should be rare.
 - Choppy markets should usually stay below 50.
-chartAnnotations should describe what a trader should visually mark on the chart:
-- liquidity areas
-- key zones
-- invalidation areas
-- wait zones
-- execution areas
-- sweeps
-- breakout areas
+
 
 Do not invent exact prices unless clearly visible.
 Return ONLY valid JSON in this structure:
@@ -322,7 +312,6 @@ Return ONLY valid JSON in this structure:
   "patienceRating": "",
   "confidenceScore": 0,
   "executionQuality": "",
-"chartAnnotations": "",
 
   "mostImportantThing": "",
   "keyLevels": "",
