@@ -385,7 +385,7 @@ export default function Home() {
             <TopMetric title="Trade Quality" value={analysis.tradeQuality} />
             <TopMetric title="Market State" value={analysis.marketState} />
             <TopMetric title="Trade Duration" value={tradeDuration} />
-          </section>
+          
 
           <section className="mb-6 grid gap-6 lg:grid-cols-2">
             <SimpleCard title="Key Levels" value={analysis.keyLevels} />
