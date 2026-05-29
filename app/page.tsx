@@ -286,9 +286,10 @@ export default function Home() {
 
     try {
       const response = await fetch("/api/analyze", {
-        method: "POST",
-        body: formData,
-      });
+  method: "POST",
+  body: formData,
+  credentials: "include",
+});
 
       const data = await response.json();
 
@@ -296,6 +297,12 @@ export default function Home() {
 
       if (!response.ok) {
         setLoading(false);
+
+if (response.status === 401) {
+  setLoading(false);
+  window.location.href = "/sign-in";
+  return;
+}
 
         if (data.code === "FREE_LIMIT_REACHED") {
           setCanAnalyze(false);
