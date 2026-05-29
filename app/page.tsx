@@ -111,7 +111,7 @@ const tradeDurations = [
 ];
 
 export default function Home() {
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
 
   const [files, setFiles] = useState<UploadedFiles>({
     daily: null,
@@ -249,6 +249,14 @@ export default function Home() {
   }
 
   async function handleAnalyze() {
+if (!isLoaded) {
+  return;
+}
+
+if (!isSignedIn) {
+  window.location.href = "/sign-in";
+  return;
+}
     if (!canAnalyze && !isPro) {
   window.location.href = "/pricing";
   return;
