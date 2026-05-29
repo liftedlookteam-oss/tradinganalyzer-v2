@@ -466,7 +466,7 @@ if (response.status === 401) {
 
   return (
     <>
-      <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
+      <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6 flex items-center justify-between">
             <a
@@ -521,18 +521,18 @@ if (response.status === 401) {
             </div>
           </header>
 
-          <section className="mb-10 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900 p-8 shadow-2xl">
+          <section className="mb-6 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900 p-5 shadow-2xl md:mb-10 md:p-8">
             <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
               <div className="max-w-4xl">
                 <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
                   AI Trading Decision Support
                 </p>
 
-                <h1 className="text-5xl font-bold tracking-tight">
+                <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
                   Chart Setup Analyzer
                 </h1>
 
-                <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-400">
+                <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-5 md:text-lg md:leading-8">
                   Upload your chart screenshots by timeframe and choose how long
                   you plan to hold the trade. The analysis adapts to your trade
                   duration instead of giving a generic market overview.
@@ -637,7 +637,7 @@ if (response.status === 401) {
             />
           </section>
 
-          <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 md:gap-5">
             {timeframes.map((timeframe) => (
               <UploadBox
                 key={timeframe.key}
@@ -860,7 +860,7 @@ function UploadBox({
   const previewUrl = file ? URL.createObjectURL(file) : null;
 
   return (
-    <label className="flex min-h-[260px] cursor-pointer flex-col justify-between rounded-3xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-5 transition hover:border-white hover:bg-zinc-900">
+    <label className="flex min-h-[190px] cursor-pointer flex-col justify-between rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-4 transition hover:border-white hover:bg-zinc-900 md:min-h-[260px] md:rounded-3xl md:p-5">
       <input
         type="file"
         accept="image/*"
@@ -881,9 +881,9 @@ function UploadBox({
           </div>
         )}
 
-        <h3 className="text-xl font-bold">{title}</h3>
+        <h3 className="text-lg font-bold md:text-xl">{title}</h3>
 
-        <p className="mt-3 text-sm leading-6 text-zinc-500">{description}</p>
+        <p className="mt-2 text-xs leading-5 text-zinc-500 md:mt-3 md:text-sm md:leading-6">{description}</p>
       </div>
 
       <div className="mt-6 rounded-2xl bg-black px-4 py-3 text-sm text-zinc-500">
