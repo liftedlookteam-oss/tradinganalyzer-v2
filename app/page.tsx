@@ -964,10 +964,12 @@ function ScenarioPanel({
       </div>
 
       <div className="mt-4 rounded-2xl bg-black/50 p-3 md:mt-6 md:p-5">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-start justify-between gap-2">
           <p className="font-bold">Probability Score</p>
 
-          <p className="text-2xl font-bold">{safeScore}/100</p>
+          <p className="shrink-0 text-xl font-bold md:text-2xl">
+  {safeScore}/100
+</p>
         </div>
 
         <div className="relative h-4 rounded-full bg-zinc-800">
