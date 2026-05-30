@@ -120,7 +120,7 @@ export default function AccountPage() {
     "No email";
 
   return (
-    <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
+    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 flex items-center justify-between">
           <div>
@@ -147,8 +147,8 @@ export default function AccountPage() {
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-          <aside className="h-fit rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4">
+        <div className="grid gap-5 lg:grid-cols-[280px_1fr] lg:gap-8">
+<aside className="rounded-[2rem] border border-zinc-800 bg-black/40 p-4 md:p-6">
             <div className="mb-4 rounded-3xl border border-zinc-800 bg-black p-5">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-600">
                 Account
@@ -179,7 +179,7 @@ export default function AccountPage() {
                   onClick={() =>
                     setActiveTab(tab.id)
                   }
-                  className={`w-full rounded-2xl px-4 py-4 text-left transition ${
+                  className={`w-full rounded-2xl px-4 py-3 text-left transition md:px-5 md:py-4 ${
                     activeTab === tab.id
                       ? "bg-white text-black"
                       : "text-zinc-400 hover:bg-black hover:text-white"
@@ -210,7 +210,7 @@ export default function AccountPage() {
 </SignOutButton>
           </aside>
 
-          <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-8">
+          <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4 md:p-8">
             {activeTab === "profile" && (
               <div>
                 <SectionHeader
@@ -478,7 +478,7 @@ function SectionHeader({
         {title}
       </p>
 
-      <h2 className="text-4xl font-bold">
+      <h2 className="text-2xl font-bold md:text-3xl">
         {title}
       </h2>
 
@@ -497,7 +497,7 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-black p-6">
+    <div className="rounded-3xl border border-zinc-800 bg-black/40 p-4 md:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-600">
         {label}
       </p>
