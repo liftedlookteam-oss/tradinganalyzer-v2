@@ -161,7 +161,7 @@ export default function HistoryPage() {
     items.length;
 
   return (
-    <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
+    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -169,11 +169,11 @@ export default function HistoryPage() {
               Saved Analyses
             </p>
 
-            <h1 className="text-5xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
               Analysis History
             </h1>
 
-            <p className="mt-4 max-w-2xl leading-7 text-zinc-400">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 md:mt-4 md:text-base md:leading-7">
               Review previous chart
               analyses, compare market
               states and revisit
@@ -199,7 +199,7 @@ export default function HistoryPage() {
           </div>
         </header>
 
-        <section className="mb-6 grid gap-5 md:grid-cols-3">
+        <section className="mb-5 grid gap-3 md:mb-6 md:grid-cols-3 md:gap-5">
           <SummaryCard
             label="Total Analyses"
             value={String(
@@ -379,7 +379,7 @@ function HistoryCard({
     "Unknown";
 
   return (
-    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6 transition hover:border-zinc-600">
+    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-zinc-600 md:p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -398,7 +398,7 @@ function HistoryCard({
             </Tag>
           </div>
 
-          <h2 className="mt-5 text-3xl font-bold">
+          <h2 className="mt-4 text-2xl font-bold md:mt-5 md:text-3xl">
             {item.instrument ||
               item.market}{" "}
             Analysis
@@ -411,7 +411,7 @@ function HistoryCard({
           </p>
         </div>
 
-        <div className="flex gap-3">
+       <div className="flex flex-wrap gap-2 md:gap-3">
           <a
             href={`/history/${item.id}`}
             className="w-fit rounded-2xl bg-white px-4 py-2 text-sm font-bold text-black transition hover:bg-zinc-200"
@@ -428,7 +428,7 @@ function HistoryCard({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 md:mt-6 md:grid-cols-3 md:gap-4">
         <Metric
           label="Bias"
           value={bias}
@@ -465,7 +465,7 @@ function HistoryCard({
         />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-2 gap-3 md:mt-6 md:gap-5 lg:grid-cols-2">
         <TextPanel
           title="Most Important Thing"
           value={

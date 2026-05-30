@@ -42,7 +42,7 @@ export default function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
+   <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-10 flex items-center justify-between">
           <a
@@ -60,22 +60,22 @@ export default function PricingPage() {
           </a>
         </header>
 
-        <section className="mb-10 rounded-[2rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-8">
+        <section className="mb-6 rounded-[2rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-5 md:mb-10 md:p-8">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
             ChartSetup Pro
           </p>
 
-          <h1 className="max-w-4xl text-5xl font-bold tracking-tight md:text-6xl">
+          <h1 className="max-w-4xl text-3xl font-bold tracking-tight md:text-6xl">
             Unlimited AI chart analysis for disciplined traders.
           </h1>
 
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-400">
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-6 md:text-lg md:leading-8">
             Free users get one analysis every 24 hours. Upgrade to remove limits,
             review more setups, and keep your decision process structured.
           </p>
         </section>
 
-        <section className="mb-8 grid gap-5 md:grid-cols-3">
+        <section className="mb-6 grid gap-3 md:mb-8 md:grid-cols-3 md:gap-5">
           <FeatureCard
             title="No blind signals"
             text="The platform focuses on market structure, scenarios and conditions instead of random buy or sell calls."
@@ -92,8 +92,8 @@ export default function PricingPage() {
           />
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-7">
+       <section className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+          <div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-5 md:p-7">
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
               Free
             </p>
@@ -124,7 +124,7 @@ export default function PricingPage() {
 
           <button
             onClick={() => startCheckout("weekly")}
-            className="rounded-[2rem] border border-white bg-white p-7 text-left text-black transition hover:bg-zinc-200"
+            className="rounded-[2rem] border border-white bg-whitep-5 md:p-7 text-left text-black transition hover:bg-zinc-200"
           >
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
               Pro Weekly
@@ -153,7 +153,7 @@ export default function PricingPage() {
 
           <button
             onClick={() => startCheckout("monthly")}
-            className="relative rounded-[2rem] border border-white bg-white p-7 text-left text-black transition hover:bg-zinc-200"
+            className="relative rounded-[2rem] border border-white bg-white p-5 md:p-7 text-left text-black transition hover:bg-zinc-200"
           >
             <div className="absolute right-6 top-6 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
               Best Value
