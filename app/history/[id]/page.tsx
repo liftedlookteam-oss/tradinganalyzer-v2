@@ -55,7 +55,7 @@ export default function HistoryDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050505] px-6 py-10 text-white">
+      <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-8">
         <div className="mx-auto max-w-7xl rounded-3xl border border-zinc-800 bg-zinc-950 p-8 text-center text-zinc-400">
           Loading analysis...
         </div>
@@ -91,7 +91,7 @@ export default function HistoryDetailPage() {
               Saved Analysis
             </p>
 
-            <h1 className="text-4xl font-bold">
+           <h1 className="text-3xl font-bold md:text-4xl">
               Trade Decision Dashboard
             </h1>
 
@@ -121,7 +121,7 @@ export default function HistoryDetailPage() {
           </div>
         </div>
 
-        <section className="mb-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+       <section className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:gap-5 lg:grid-cols-4">
           <TopMetric title="Overall Bias" value={analysis.overallBias} />
           <TopMetric title="Trade Quality" value={analysis.tradeQuality} />
           <TopMetric title="Market State" value={analysis.marketState} />
@@ -136,7 +136,7 @@ export default function HistoryDetailPage() {
           />
         </section>
 
-        <section className="mb-6 grid gap-6 lg:grid-cols-2">
+        <section className="mb-6 grid grid-cols-2 gap-3 md:gap-6">
           <ScenarioPanel
             type="bullish"
             title="Bullish Scenario"
@@ -238,14 +238,14 @@ function ScenarioPanel({
           : "border-red-600/70 bg-red-900/35"
       }`}
     >
-      <h2 className="text-3xl font-bold">{title}</h2>
+      <h2 className="text-xl font-bold md:text-3xl">{title}</h2>
 
       <div className="mt-6 rounded-2xl bg-black/50 p-5">
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
           Scenario
         </p>
 
-        <p className="whitespace-pre-wrap leading-8 text-zinc-200">
+       <p className="whitespace-pre-wrap text-xs leading-5 text-zinc-200 md:text-base md:leading-8">
           {scenario || "No scenario provided."}
         </p>
       </div>
@@ -255,13 +255,13 @@ function ScenarioPanel({
           What must happen
         </p>
 
-        <p className="whitespace-pre-wrap leading-8 text-zinc-200">
+        <p className="whitespace-pre-wrap text-xs leading-5 text-zinc-200 md:text-base md:leading-8">
           {conditions || "No conditions provided."}
         </p>
       </div>
 
       <div className="mt-6 rounded-2xl bg-black/60 p-5">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
           <p className="font-bold">Probability Score</p>
           <p className="text-2xl font-bold">{safeScore}/100</p>
         </div>
