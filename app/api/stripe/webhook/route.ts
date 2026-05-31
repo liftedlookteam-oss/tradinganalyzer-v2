@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       if (email) {
         try {
           await resend.emails.send({
-            from: "ChartSetup Analyzer <noreply@chartsetup.app>",
+            from: "ChartSetup Analyzer <noreply@send.chartsetup.app>",
             to: email,
             subject: "Your ChartSetup Pro subscription is active",
             html: `
