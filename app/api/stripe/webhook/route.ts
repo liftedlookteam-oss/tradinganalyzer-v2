@@ -25,9 +25,10 @@ export async function POST(request: Request) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
       const userId =
-  session.metadata?.clerk_user_id ||
-  session.metadata?.user_id;
+        session.metadata?.clerk_user_id ||
+        session.metadata?.user_id;
 
       if (!userId) {
         return Response.json(
@@ -46,41 +47,40 @@ export async function POST(request: Request) {
       });
 
       const email = session.customer_details?.email;
-const plan = session.metadata?.selected_plan || "Pro";
+      const plan = session.metadata?.selected_plan || "Pro";
 
-console.log("RESEND_EMAIL_DEBUG", {
-  email,
-  plan,
-  hasResendKey: Boolean(process.env.RESEND_API_KEY),
-});
+      console.log("RESEND_EMAIL_DEBUG", {
+        email,
+        plan,
+        hasResendKey: Boolean(process.env.RESEND_API_KEY),
+      });
 
-if (email) {
-  try {
-    console.log("RESEND_SEND_ATTEMPT");
+      if (email) {
+        try {
+          console.log("RESEND_SEND_ATTEMPT");
 
-    const emailResult = await resend.emails.send({
-      from: "ChartSetup Analyzer <noreply@send.chartsetup.app>",
-      to: email,
-      subject: "Your ChartSetup Pro subscription is active",
-      html: `
-        <div style="font-family: Arial, sans-serif; background:#050505; color:#ffffff; padding:32px;">
-          <h1>Your Pro subscription is active</h1>
-          <p>Thanks for upgrading to ChartSetup Pro.</p>
-          <p>Your selected plan: <strong>${plan}</strong></p>
-          <p>You now have access to unlimited AI chart analyses, full analysis history, and priority processing.</p>
-          <p>You can manage your subscription anytime from your account dashboard.</p>
-          <p style="color:#999999; margin-top:32px;">
-            ChartSetup Analyzer is decision-support only and does not provide financial advice.
-          </p>
-        </div>
-      `,
-    });
+          const emailResult = await resend.emails.send({
+            from: "ChartSetup Analyzer <noreply@send.chartsetup.app>",
+            to: email,
+            subject: "Your ChartSetup Pro subscription is active",
+            html: `
+              <div style="font-family: Arial, sans-serif; background:#050505; color:#ffffff; padding:32px;">
+                <h1>Your Pro subscription is active</h1>
+                <p>Thanks for upgrading to ChartSetup Pro.</p>
+                <p>Your selected plan: <strong>${plan}</strong></p>
+                <p>You now have access to unlimited AI chart analyses, full analysis history, and priority processing.</p>
+                <p>You can manage your subscription anytime from your account dashboard.</p>
+                <p style="color:#999999; margin-top:32px;">
+                  ChartSetup Analyzer is decision-support only and does not provide financial advice.
+                </p>
+              </div>
+            `,
+          });
 
-    console.log("RESEND_SEND_RESULT", emailResult);
-  } catch (emailError) {
-    console.error("SUBSCRIPTION_EMAIL_ERROR:", emailError);
-  }
-}
+          console.log("RESEND_SEND_RESULT", emailResult);
+        } catch (emailError) {
+          console.error("SUBSCRIPTION_EMAIL_ERROR:", emailError);
+        }
       }
     }
 
@@ -91,6 +91,18 @@ if (email) {
         .from("subscriptions")
         .update({
           status: "canceled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("stripe_subscription_id", subscription.id);
+    }
+
+    if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      await supabase
+        .from("subscriptions")
+        .update({
+          status: subscription.status,
           updated_at: new Date().toISOString(),
         })
         .eq("stripe_subscription_id", subscription.id);
