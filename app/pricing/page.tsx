@@ -1,7 +1,7 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export default function PricingPage() {
   const { isSignedIn } = useUser();
@@ -42,7 +42,7 @@ export default function PricingPage() {
   }
 
   return (
-   <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
+    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-10 flex items-center justify-between">
           <a
@@ -70,8 +70,9 @@ export default function PricingPage() {
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-6 md:text-lg md:leading-8">
-            Free users get one analysis every 24 hours. Upgrade to remove limits,
-            review more setups, and keep your decision process structured.
+            Free users get one analysis every 24 hours. Upgrade to remove
+            limits, review more setups, and keep your decision process
+            structured.
           </p>
         </section>
 
@@ -92,18 +93,18 @@ export default function PricingPage() {
           />
         </section>
 
-       <section className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          <div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-5 md:p-7">
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+        <section className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+          <div className="rounded-[2rem] border border-white bg-white p-5 text-black md:p-7">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
               Free
             </p>
 
             <div className="mt-5 flex items-end gap-2">
               <p className="text-5xl font-bold">€0</p>
-              <p className="mb-2 text-zinc-500">/ day</p>
+              <p className="mb-2 text-zinc-600">/ day</p>
             </div>
 
-            <p className="mt-5 leading-8 text-zinc-400">
+            <p className="mt-5 leading-8 text-zinc-700">
               One AI analysis every 24 hours. Best for testing the workflow and
               checking occasional setups.
             </p>
@@ -116,7 +117,7 @@ export default function PricingPage() {
 
             <a
               href="/"
-              className="mt-8 block rounded-2xl border border-zinc-700 px-5 py-4 text-center font-bold text-zinc-300 transition hover:border-white hover:text-white"
+              className="mt-8 block rounded-2xl bg-black px-5 py-4 text-center font-bold text-white transition hover:bg-zinc-800"
             >
               Continue Free
             </a>
@@ -124,7 +125,7 @@ export default function PricingPage() {
 
           <button
             onClick={() => startCheckout("weekly")}
-            className="rounded-[2rem] border border-white bg-whitep-5 md:p-7 text-left text-black transition hover:bg-zinc-200"
+            className="rounded-[2rem] border border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
           >
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
               Pro Weekly
@@ -136,24 +137,26 @@ export default function PricingPage() {
             </div>
 
             <p className="mt-5 leading-8 text-zinc-700">
-              Flexible Pro access for traders who want unlimited analysis without
-              committing monthly.
+              Flexible Pro access for traders who want unlimited analysis
+              without committing monthly.
             </p>
 
             <div className="mt-7 space-y-3">
-              <PlanItem dark text="Unlimited analyses" />
-              <PlanItem dark text="Full history access" />
-              <PlanItem dark text="Priority analysis processing" />
+              <PlanItem text="Unlimited analyses" />
+              <PlanItem text="Full history access" />
+              <PlanItem text="Priority analysis processing" />
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-              {loadingPlan === "weekly" ? "Opening Checkout..." : "Choose Weekly"}
+              {loadingPlan === "weekly"
+                ? "Opening Checkout..."
+                : "Choose Weekly"}
             </div>
           </button>
 
           <button
             onClick={() => startCheckout("monthly")}
-            className="relative rounded-[2rem] border border-white bg-white p-5 md:p-7 text-left text-black transition hover:bg-zinc-200"
+            className="relative rounded-[2rem] border-2 border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
           >
             <div className="absolute right-6 top-6 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
               Best Value
@@ -174,9 +177,9 @@ export default function PricingPage() {
             </p>
 
             <div className="mt-7 space-y-3">
-              <PlanItem dark text="Unlimited analyses" />
-              <PlanItem dark text="Full history access" />
-              <PlanItem dark text="Priority analysis processing" />
+              <PlanItem text="Unlimited analyses" />
+              <PlanItem text="Full history access" />
+              <PlanItem text="Priority analysis processing" />
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
@@ -211,20 +214,14 @@ function FeatureCard({ title, text }: { title: string; text: string }) {
   );
 }
 
-function PlanItem({ text, dark = false }: { text: string; dark?: boolean }) {
+function PlanItem({ text }: { text: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div
-        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-          dark ? "bg-black text-white" : "bg-white text-black"
-        }`}
-      >
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
         ✓
       </div>
 
-      <p className={dark ? "font-semibold text-black" : "text-zinc-300"}>
-        {text}
-      </p>
+      <p className="font-semibold text-black">{text}</p>
     </div>
   );
 }
