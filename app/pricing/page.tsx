@@ -6,14 +6,14 @@ import { useUser } from "@clerk/nextjs";
 export default function PricingPage() {
   const { isSignedIn } = useUser();
   const [loadingPlan, setLoadingPlan] = useState<"weekly" | "monthly" | null>(
-    null
-  );
+  null
+);
+
+const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
 
   async function startCheckout(plan: "weekly" | "monthly") {
-    alert(
-      "Pro subscriptions are launching soon. Free users can continue using 1 analysis every 24 hours."
-    );
-  }
+  setShowLaunchingSoon(true);
+}
 
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
@@ -168,6 +168,31 @@ export default function PricingPage() {
           </p>
         </section>
       </div>
+{showLaunchingSoon && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
+    <div className="w-full max-w-md rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 text-white shadow-2xl">
+      <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+        Launching Soon
+      </p>
+
+      <h2 className="mt-3 text-3xl font-bold">
+        Pro subscriptions are launching soon
+      </h2>
+
+      <p className="mt-4 leading-7 text-zinc-400">
+        Free users can continue using 1 analysis every 24 hours while we
+        prepare live payments.
+      </p>
+
+      <button
+        onClick={() => setShowLaunchingSoon(false)}
+        className="mt-6 w-full rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-zinc-200"
+      >
+        Got it
+      </button>
+    </div>
+  </div>
+)}
     </main>
   );
 }
