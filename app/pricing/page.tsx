@@ -10,10 +10,10 @@ export default function PricingPage() {
   );
 
   async function startCheckout(plan: "weekly" | "monthly") {
-    if (!isSignedIn) {
-      window.location.href = "/sign-in";
-      return;
-    }
+  alert(
+    "Pro subscriptions are launching soon. Free users can continue using 1 analysis every 24 hours."
+  );
+}
 
     setLoadingPlan(plan);
 
