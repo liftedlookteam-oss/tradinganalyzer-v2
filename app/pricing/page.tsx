@@ -10,35 +10,9 @@ export default function PricingPage() {
   );
 
   async function startCheckout(plan: "weekly" | "monthly") {
-  alert(
-    "Pro subscriptions are launching soon. Free users can continue using 1 analysis every 24 hours."
-  );
-}
-
-    setLoadingPlan(plan);
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Checkout failed.");
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch {
-      alert("Checkout failed.");
-    } finally {
-      setLoadingPlan(null);
-    }
+    alert(
+      "Pro subscriptions are launching soon. Free users can continue using 1 analysis every 24 hours."
+    );
   }
 
   return (
@@ -70,9 +44,8 @@ export default function PricingPage() {
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-6 md:text-lg md:leading-8">
-            Free users get one analysis every 24 hours. Upgrade to remove
-            limits, review more setups, and keep your decision process
-            structured.
+            Free users get one analysis every 24 hours. Pro subscriptions are
+            launching soon.
           </p>
         </section>
 
@@ -81,12 +54,10 @@ export default function PricingPage() {
             title="No blind signals"
             text="The platform focuses on market structure, scenarios and conditions instead of random buy or sell calls."
           />
-
           <FeatureCard
             title="Multi-timeframe context"
             text="Upload several chart screenshots so the analysis can compare higher-timeframe bias with execution context."
           />
-
           <FeatureCard
             title="Built for patience"
             text="WAIT and NO TRADE are treated as valid outcomes when there is no clear edge."
@@ -148,9 +119,7 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-              {loadingPlan === "weekly"
-                ? "Opening Checkout..."
-                : "Choose Weekly"}
+              Launching Soon
             </div>
           </button>
 
@@ -183,9 +152,7 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-              {loadingPlan === "monthly"
-                ? "Opening Checkout..."
-                : "Choose Monthly"}
+              Launching Soon
             </div>
           </button>
         </section>
