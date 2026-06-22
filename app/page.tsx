@@ -379,27 +379,27 @@ if (response.status === 401) {
             </div>
 
             <div className="flex items-center gap-3">
-              <a
-                href="/history"
-                className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-              >
-                History
-              </a>
-<a
-  href="/dashboard"
-  className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
->
-  Trading Dashboard
-</a>
+  <a
+    href="/history"
+    className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+  >
+    History
+  </a>
 
-              <button
-                onClick={handleNewAnalysis}
-                className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-              >
-                New Analysis
-              </button>
-            </div>
-          </div>
+  <a
+    href="/dashboard"
+    className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+  >
+    Trading Dashboard
+  </a>
+
+  <button
+    onClick={handleNewAnalysis}
+    className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+  >
+    New Analysis
+  </button>
+</div>
 
           <section className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:gap-5 lg:grid-cols-4">
             <TopMetric title="Overall Bias" value={analysis.overallBias} />
