@@ -385,6 +385,12 @@ if (response.status === 401) {
               >
                 History
               </a>
+<a
+  href="/dashboard"
+  className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+>
+  Trading Dashboard
+</a>
 
               <button
                 onClick={handleNewAnalysis}
