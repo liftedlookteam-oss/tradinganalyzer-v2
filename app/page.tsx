@@ -476,12 +476,21 @@ if (response.status === 401) {
       <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6 flex items-center justify-between">
-            <a
-              href="/history"
-              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
-            >
-              History
-            </a>
+            <div className="flex items-center gap-3">
+  <a
+    href="/history"
+    className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+  >
+    History
+  </a>
+
+  <a
+    href="/dashboard"
+    className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+  >
+    Trading Dashboard
+  </a>
+</div>
 
             <div className="flex items-center gap-3">
               {usageLoaded ? (
