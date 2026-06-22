@@ -400,6 +400,7 @@ if (response.status === 401) {
     New Analysis
   </button>
 </div>
+</div>
 
           <section className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:gap-5 lg:grid-cols-4">
             <TopMetric title="Overall Bias" value={analysis.overallBias} />
