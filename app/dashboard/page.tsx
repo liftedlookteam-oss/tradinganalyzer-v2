@@ -12,7 +12,13 @@ type Trade = {
   trade_date: string;
 };
 
+type CalendarCell = {
+  date: Date;
+  inCurrentMonth: boolean;
+};
+
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const currencies = ["USD", "EUR", "GBP"];
 
 export default function TradingDashboard() {
   const { isLoaded, isSignedIn } = useUser();
@@ -20,8 +26,12 @@ export default function TradingDashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [trades, setTrades] = useState<Trade[]>([]);
   const [startingBalance, setStartingBalance] = useState(0);
+  const [currency, setCurrency] = useState("USD");
+
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [showDayTradesModal, setShowDayTradesModal] = useState(false);
 
   const [asset, setAsset] = useState("");
   const [result, setResult] = useState<"win" | "loss" | "breakeven">("win");
@@ -51,6 +61,7 @@ export default function TradingDashboard() {
 
       setTrades(tradesData.trades || []);
       setStartingBalance(Number(accountData.account?.starting_balance || 0));
+      setCurrency(accountData.account?.currency || "USD");
     } catch {
       console.error("Failed to load dashboard.");
     }
@@ -96,11 +107,15 @@ export default function TradingDashboard() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ starting_balance: startingBalance }),
+      body: JSON.stringify({
+        starting_balance: startingBalance,
+        currency,
+      }),
     });
 
     if (!response.ok) {
-      alert("Failed to save balance.");
+      const errorData = await response.json().catch(() => null);
+      alert(errorData?.error || "Failed to save balance.");
       return;
     }
 
@@ -129,14 +144,16 @@ export default function TradingDashboard() {
   const netPnL = trades.reduce((sum, trade) => sum + Number(trade.amount), 0);
   const wins = trades.filter((trade) => Number(trade.amount) > 0).length;
   const losses = trades.filter((trade) => Number(trade.amount) < 0).length;
+  const breakevens = trades.filter((trade) => Number(trade.amount) === 0).length;
   const totalClosed = wins + losses;
   const winRate = totalClosed > 0 ? Math.round((wins / totalClosed) * 100) : 0;
   const currentBalance = startingBalance + netPnL;
 
   const weekSummaries = calendarDays.map((week, index) => {
-    const weekTrades = week.flatMap((day) =>
-      day ? tradesByDate[toDateKey(day)] || [] : []
-    );
+    const weekTrades = week.flatMap((cell) => {
+      const key = toDateKey(cell.date);
+      return tradesByDate[key] || [];
+    });
 
     const total = weekTrades.reduce(
       (sum, trade) => sum + Number(trade.amount),
@@ -150,6 +167,11 @@ export default function TradingDashboard() {
     };
   });
 
+  const selectedDayTrades = useMemo(() => {
+    if (!selectedDay) return [];
+    return tradesByDate[toDateKey(selectedDay)] || [];
+  }, [selectedDay, tradesByDate]);
+
   function previousMonth() {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
@@ -162,9 +184,27 @@ export default function TradingDashboard() {
     );
   }
 
+  function openDayTrades(date: Date, tradeCount: number) {
+    if (tradeCount === 0) return;
+    setSelectedDay(date);
+    setShowDayTradesModal(true);
+  }
+
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
+        <style jsx global>{`
+          input[type="number"]::-webkit-outer-spin-button,
+          input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+
+          input[type="number"] {
+            -moz-appearance: textfield;
+          }
+        `}</style>
+
         <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
@@ -201,18 +241,18 @@ export default function TradingDashboard() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Account Balance"
-            value={formatMoney(currentBalance)}
-            subtext={`Starting: ${formatMoney(startingBalance)}`}
+            value={formatMoney(currentBalance, currency)}
+            subtext={`Starting: ${formatMoney(startingBalance, currency)}`}
           />
           <StatCard
             label="Net P&L"
-            value={formatMoney(netPnL)}
+            value={formatMoney(netPnL, currency)}
             subtext="All logged trades"
           />
           <StatCard
             label="Win Rate"
             value={`${winRate}%`}
-            subtext={`${wins} wins / ${losses} losses`}
+            subtext={`${wins} wins / ${losses} losses / ${breakevens} BE`}
           />
           <StatCard
             label="Total Trades"
@@ -286,17 +326,8 @@ export default function TradingDashboard() {
             <div className="mt-4 grid gap-2 md:gap-3">
               {calendarDays.map((week, weekIndex) => (
                 <div key={weekIndex} className="grid grid-cols-7 gap-2 md:gap-3">
-                  {week.map((day, dayIndex) => {
-                    if (!day) {
-                      return (
-                        <div
-                          key={dayIndex}
-                          className="min-h-[76px] rounded-2xl border border-zinc-900 bg-black md:min-h-[92px]"
-                        />
-                      );
-                    }
-
-                    const key = toDateKey(day);
+                  {week.map((cell) => {
+                    const key = toDateKey(cell.date);
                     const dayTrades = tradesByDate[key] || [];
                     const dayTotal = dayTrades.reduce(
                       (sum, trade) => sum + Number(trade.amount),
@@ -304,26 +335,29 @@ export default function TradingDashboard() {
                     );
 
                     return (
-                      <div
+                      <button
                         key={key}
-                        className={`min-h-[76px] rounded-2xl border p-2 text-sm md:min-h-[92px] md:p-3 ${getResultClass(
+                        onClick={() => openDayTrades(cell.date, dayTrades.length)}
+                        className={`min-h-[76px] rounded-2xl border p-2 text-left text-sm transition md:min-h-[92px] md:p-3 ${getDayClass(
                           dayTotal,
                           dayTrades.length
-                        )}`}
+                        )} ${!cell.inCurrentMonth ? "opacity-45" : ""} ${
+                          dayTrades.length > 0 ? "cursor-pointer" : "cursor-default"
+                        }`}
                       >
-                        <div className="font-semibold">{day.getDate()}</div>
+                        <div className="font-semibold">{cell.date.getDate()}</div>
 
                         {dayTrades.length > 0 && (
                           <div className="mt-2">
                             <p className="text-xs font-bold">
-                              {formatMoney(dayTotal)}
+                              {formatMoney(dayTotal, currency)}
                             </p>
                             <p className="text-[10px] text-zinc-300">
                               {dayTrades.length} trade
                             </p>
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -336,7 +370,7 @@ export default function TradingDashboard() {
               <SummaryCard
                 key={week.title}
                 title={week.title}
-                amount={formatMoney(week.amount)}
+                amount={formatMoney(week.amount, currency)}
                 trades={`${week.trades} trades`}
                 value={week.amount}
                 hasTrades={week.trades > 0}
@@ -410,8 +444,8 @@ export default function TradingDashboard() {
             <h2 className="text-3xl font-bold">Set Account Balance</h2>
 
             <p className="mt-3 text-zinc-400">
-              Enter your starting account balance. Logged wins and losses will
-              update the dashboard balance.
+              Set your real account starting balance and choose the account
+              currency.
             </p>
 
             <input
@@ -421,6 +455,18 @@ export default function TradingDashboard() {
               placeholder="Starting balance"
               className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 outline-none"
             />
+
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="mt-3 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 outline-none"
+            >
+              {currencies.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
 
             <div className="mt-5 flex gap-3">
               <button
@@ -440,11 +486,79 @@ export default function TradingDashboard() {
           </div>
         </div>
       )}
+
+      {showDayTradesModal && selectedDay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">
+                  {selectedDay.toLocaleDateString(undefined, {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </h2>
+                <p className="mt-2 text-zinc-400">
+                  Trades logged on this day
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowDayTradesModal(false)}
+                className="rounded-2xl border border-zinc-700 px-4 py-2 text-sm font-bold"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {selectedDayTrades.map((trade) => (
+                <div
+                  key={trade.id}
+                  className="rounded-2xl border border-zinc-800 bg-black p-4"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-lg font-bold">{trade.asset}</p>
+                      <p className="mt-1 text-sm uppercase tracking-[0.2em] text-zinc-500">
+                        {trade.result}
+                      </p>
+                    </div>
+
+                    <p
+                      className={`text-lg font-bold ${
+                        Number(trade.amount) > 0
+                          ? "text-emerald-400"
+                          : Number(trade.amount) < 0
+                          ? "text-red-400"
+                          : "text-zinc-300"
+                      }`}
+                    >
+                      {formatMoney(Number(trade.amount), currency)}
+                    </p>
+                  </div>
+
+                  {trade.notes && (
+                    <p className="mt-3 text-sm text-zinc-400">{trade.notes}</p>
+                  )}
+                </div>
+              ))}
+
+              {selectedDayTrades.length === 0 && (
+                <div className="rounded-2xl border border-zinc-800 bg-black p-5 text-zinc-400">
+                  No trades logged for this day.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-function buildCalendar(date: Date) {
+function buildCalendar(date: Date): CalendarCell[][] {
   const year = date.getFullYear();
   const month = date.getMonth();
 
@@ -453,36 +567,61 @@ function buildCalendar(date: Date) {
 
   const mondayIndex = (firstDay.getDay() + 6) % 7;
 
-  const weeks: (Date | null)[][] = [];
-  let currentWeek: (Date | null)[] = Array(mondayIndex).fill(null);
+  const startDate = new Date(firstDay);
+  startDate.setDate(firstDay.getDate() - mondayIndex);
 
-  for (let day = 1; day <= lastDay.getDate(); day++) {
-    currentWeek.push(new Date(year, month, day));
+  const sundayIndex = (lastDay.getDay() + 6) % 7;
+  const endDate = new Date(lastDay);
+  endDate.setDate(lastDay.getDate() + (6 - sundayIndex));
 
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+  const weeks: CalendarCell[][] = [];
+  const current = new Date(startDate);
+
+  while (current <= endDate) {
+    const week: CalendarCell[] = [];
+
+    for (let i = 0; i < 7; i++) {
+      week.push({
+        date: new Date(current),
+        inCurrentMonth: current.getMonth() === month,
+      });
+
+      current.setDate(current.getDate() + 1);
     }
-  }
 
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) currentWeek.push(null);
-    weeks.push(currentWeek);
+    weeks.push(week);
   }
 
   return weeks;
 }
 
 function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function formatMoney(value: number) {
-  const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${sign}$${Math.abs(value).toFixed(2)}`;
+function getCurrencySymbol(currency: string) {
+  switch (currency) {
+    case "EUR":
+      return "€";
+    case "GBP":
+      return "£";
+    default:
+      return "$";
+  }
 }
 
-function getResultClass(total: number, count: number) {
+function formatMoney(value: number, currency: string) {
+  const symbol = getCurrencySymbol(currency);
+  const abs = Math.abs(value).toFixed(2);
+
+  if (value < 0) return `-${symbol}${abs}`;
+  return `${symbol}${abs}`;
+}
+
+function getDayClass(total: number, count: number) {
   if (count === 0) return "border-zinc-800 bg-[#0b0b0b] text-zinc-500";
   if (total > 0) return "border-emerald-600/50 bg-emerald-950/40 text-white";
   if (total < 0) return "border-red-600/50 bg-red-950/40 text-white";
@@ -525,9 +664,9 @@ function SummaryCard({
   const className = !hasTrades
     ? "border-zinc-800 bg-zinc-950"
     : value > 0
-    ? "border-emerald-700/40 bg-emerald-950/30"
+    ? "border-emerald-500/35 bg-emerald-900/35"
     : value < 0
-    ? "border-red-700/40 bg-red-950/30"
+    ? "border-red-500/35 bg-red-900/35"
     : "border-zinc-700 bg-zinc-900";
 
   return (

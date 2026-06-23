@@ -35,13 +35,20 @@ export async function POST(req: Request) {
 
   const body = await req.json();
   const startingBalance = Number(body.starting_balance || 0);
+  const currency = String(body.currency || "USD").toUpperCase();
 
-  const { error } = await supabase.from("trading_accounts").upsert({
-    user_id: userId,
-    starting_balance: startingBalance,
-    current_balance: startingBalance,
-    updated_at: new Date().toISOString(),
-  });
+  const { error } = await supabase.from("trading_accounts").upsert(
+    {
+      user_id: userId,
+      starting_balance: startingBalance,
+      current_balance: startingBalance,
+      currency,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "user_id",
+    }
+  );
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
