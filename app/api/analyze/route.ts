@@ -350,7 +350,8 @@ Scoring rules:
 - below 40 when that side is weak.
 - Do not cap strong setups at 70 if evidence clearly supports higher probability.
 `,
-});
+},
+];
 
 for (const item of imageInputs) {
       content.push({
