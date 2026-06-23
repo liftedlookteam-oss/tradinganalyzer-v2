@@ -328,11 +328,29 @@ Return ONLY valid JSON in this structure:
 
   "scoreReason": "",
   "finalDecision": ""
-}
-`,
-      },
-    ];
+} 
 
+Bullish and bearish scenarios must be specific, practical and trade-relevant.
+
+Do not write generic phrases like "price may go up" or "price may go down".
+
+Each scenario must include:
+- the exact visible price area, swing level, support/resistance, liquidity area or structure zone if visible
+- what must happen for that scenario to activate
+- what would invalidate that scenario
+- why that scenario has that probability
+
+Bullish score and bearish score must always add up to exactly 100.
+
+Scoring rules:
+- 80–90 only when higher timeframe bias, structure, momentum, liquidity, and execution context strongly align.
+- 70–79 for strong setups with minor missing confirmation.
+- 60–69 for decent but incomplete setups.
+- 50/50 for unclear or balanced conditions.
+- below 40 when that side is weak.
+- Do not cap strong setups at 70 if evidence clearly supports higher probability.
+`,
+      
     for (const item of imageInputs) {
       content.push({
         type: "input_text",
@@ -423,6 +441,14 @@ Return ONLY valid JSON in this structure:
 
     const analysis =
       cleanAnalysis(parsedAnalysis);
+const rawBullishScore = Number(analysis.bullishScore ?? 50);
+const normalizedBullishScore = Math.max(
+  0,
+  Math.min(100, rawBullishScore)
+);
+
+analysis.bullishScore = normalizedBullishScore;
+analysis.bearishScore = 100 - normalizedBullishScore;
 
     const {
       data: insertedAnalysis,
