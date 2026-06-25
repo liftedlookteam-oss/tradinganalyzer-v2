@@ -32,6 +32,7 @@ const [currencyDraft, setCurrencyDraft] = useState("USD");
 
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+const [isSavingBalance, setIsSavingBalance] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [showDayTradesModal, setShowDayTradesModal] = useState(false);
 
@@ -104,6 +105,8 @@ const [currencyDraft, setCurrencyDraft] = useState("USD");
   }
 
   async function saveBalance() {
+if (isSavingBalance) return;
+setIsSavingBalance(true);
     const response = await fetch("/api/trading-account", {
       method: "POST",
       headers: {
@@ -118,11 +121,13 @@ currency: currencyDraft,
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       alert(errorData?.error || "Failed to save balance.");
+setIsSavingBalance(false);
       return;
     }
 
     setShowBalanceModal(false);
-    loadDashboard();
+setIsSavingBalance(false);
+loadDashboard();
 setStartingBalance(balanceDraft);
 setCurrency(currencyDraft);
   }
@@ -457,8 +462,8 @@ setCurrency(currencyDraft);
             </p>
 
             <input
-              value={balanceDraft}
-onChange={(e) => setBalanceDraft(Number(e.target.value))}
+              value={balanceDraft === 0 ? "" : balanceDraft}
+onChange={(e) => setBalanceDraft(Number(e.target.value || 0))}
               type="number"
               placeholder="Starting balance"
               className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 outline-none"
@@ -477,19 +482,21 @@ onChange={(e) => setCurrencyDraft(e.target.value)}
             </select>
 
             <div className="mt-5 flex gap-3">
-              <button
-                onClick={() => setShowBalanceModal(false)}
-                className="w-full rounded-2xl border border-zinc-700 px-5 py-4 font-bold"
-              >
-                Cancel
-              </button>
+             <button
+  onClick={() => setShowBalanceModal(false)}
+  disabled={isSavingBalance}
+  className="w-full rounded-2xl border border-zinc-700 px-5 py-4 font-bold transition hover:border-zinc-500 hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  Cancel
+</button>
 
               <button
-                onClick={saveBalance}
-                className="w-full rounded-2xl bg-white px-5 py-4 font-bold text-black"
-              >
-                Save Balance
-              </button>
+  onClick={saveBalance}
+  disabled={isSavingBalance}
+  className="w-full rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {isSavingBalance ? "Saving..." : "Save Balance"}
+</button>
             </div>
           </div>
         </div>
