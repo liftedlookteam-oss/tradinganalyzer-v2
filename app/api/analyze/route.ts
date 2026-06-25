@@ -260,6 +260,18 @@ If the trigger is already triggered, explain whether the trade is:
 - invalidated
 
 Scores must reflect the selected duration, not only the higher timeframe bias.
+When describing bullish and bearish scenarios, clearly state whether the setup is:
+1) waiting for trigger,
+2) already triggered and now waiting for retest or continuation,
+or 3) too extended / too late to enter.
+
+Do not repeat "wait for breakout" if that breakout already happened on the provided charts.
+
+If the original trigger already happened, explain the next valid action:
+- wait for retest
+- wait for continuation confirmation
+- avoid chasing
+- no trade if risk-reward is poor
 
 The screenshots are the primary source of truth.
 
