@@ -27,6 +27,8 @@ export default function TradingDashboard() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [startingBalance, setStartingBalance] = useState(0);
   const [currency, setCurrency] = useState("USD");
+const [balanceDraft, setBalanceDraft] = useState(0);
+const [currencyDraft, setCurrencyDraft] = useState("USD");
 
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -108,8 +110,8 @@ export default function TradingDashboard() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        starting_balance: startingBalance,
-        currency,
+        starting_balance: balanceDraft,
+currency: currencyDraft,
       }),
     });
 
@@ -121,6 +123,8 @@ export default function TradingDashboard() {
 
     setShowBalanceModal(false);
     loadDashboard();
+setStartingBalance(balanceDraft);
+setCurrency(currencyDraft);
   }
 
   const calendarDays = useMemo(() => buildCalendar(currentDate), [currentDate]);
@@ -273,7 +277,11 @@ export default function TradingDashboard() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => setShowBalanceModal(true)}
+              onClick={() => {
+  setBalanceDraft(startingBalance);
+  setCurrencyDraft(currency);
+  setShowBalanceModal(true);
+}}
               className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200"
             >
               Set Balance
@@ -449,16 +457,16 @@ export default function TradingDashboard() {
             </p>
 
             <input
-              value={startingBalance}
-              onChange={(e) => setStartingBalance(Number(e.target.value))}
+              value={balanceDraft}
+onChange={(e) => setBalanceDraft(Number(e.target.value))}
               type="number"
               placeholder="Starting balance"
               className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 outline-none"
             />
 
             <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
+              value={currencyDraft}
+onChange={(e) => setCurrencyDraft(e.target.value)}
               className="mt-3 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 outline-none"
             >
               {currencies.map((item) => (
