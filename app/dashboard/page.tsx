@@ -31,6 +31,7 @@ const [balanceDraft, setBalanceDraft] = useState(0);
 const [currencyDraft, setCurrencyDraft] = useState("USD");
 
   const [showTradeModal, setShowTradeModal] = useState(false);
+const [isSavingTrade, setIsSavingTrade] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
 const [isSavingBalance, setIsSavingBalance] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -71,6 +72,8 @@ const [isSavingBalance, setIsSavingBalance] = useState(false);
   }
 
   async function saveTrade() {
+if (isSavingTrade) return;
+setIsSavingTrade(true);
     if (!asset.trim() || !amount) return;
 
     const rawAmount = Math.abs(Number(amount));
@@ -91,17 +94,19 @@ const [isSavingBalance, setIsSavingBalance] = useState(false);
       }),
     });
 
-    if (!response.ok) {
-      alert("Failed to save trade.");
-      return;
-    }
+   if (!response.ok) {
+  alert("Failed to save trade.");
+  setIsSavingTrade(false);
+  return;
+}
 
-    setAsset("");
-    setResult("win");
-    setAmount("");
-    setNotes("");
-    setShowTradeModal(false);
-    loadDashboard();
+setAsset("");
+setResult("win");
+setAmount("");
+setNotes("");
+setShowTradeModal(false);
+setIsSavingTrade(false);
+loadDashboard();
   }
 
   async function saveBalance() {
@@ -440,12 +445,13 @@ setCurrency(currencyDraft);
                 Cancel
               </button>
 
-              <button
-                onClick={saveTrade}
-                className="w-full rounded-2xl bg-white px-5 py-4 font-bold text-black"
-              >
-                Save Trade
-              </button>
+             <button
+  onClick={saveTrade}
+  disabled={isSavingTrade}
+  className="w-full rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {isSavingTrade ? "Saving..." : "Save Trade"}
+</button>
             </div>
           </div>
         </div>
