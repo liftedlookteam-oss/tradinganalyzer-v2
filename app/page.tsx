@@ -168,8 +168,10 @@ export default function Home() {
     "Intraday: 30 minutes–4 hours"
   );
 
+const selectedDuration = tradeDuration.toLowerCase();
+
 const timeframes =
-  tradeDuration === "scalp" ? scalpTimeframes : standardTimeframes;
+  selectedDuration.includes("scalp") ? scalpTimeframes : standardTimeframes;
 
   const [loading, setLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
