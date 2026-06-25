@@ -70,7 +70,7 @@ const scalpTimeframes = [
     description:
       "Best for scalping, execution timing and very short-term setups.",
   },
-];
+] as const;
 
 const standardTimeframes = [
   {
@@ -109,7 +109,7 @@ const standardTimeframes = [
     description:
       "Useful for execution timing, lower-timeframe structure and confirmation.",
   },
-];
+] as const;
 
 
 const markets = [
@@ -702,8 +702,10 @@ if (response.status === 401) {
                 key={timeframe.key}
                 title={timeframe.title}
                 description={timeframe.description}
-                file={files[timeframe.key]}
-                onChange={(file) => handleFileChange(timeframe.key, file)}
+                file={files[timeframe.key as keyof UploadedFiles]}
+                onChange={(file) =>
+  handleFileChange(timeframe.key as keyof UploadedFiles, file)
+}
               />
             ))}
           </section>
