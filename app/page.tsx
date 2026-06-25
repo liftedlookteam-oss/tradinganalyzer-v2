@@ -111,8 +111,6 @@ const standardTimeframes = [
   },
 ];
 
-const timeframes =
-  tradeDuration === "scalp" ? scalpTimeframes : standardTimeframes;
 
 const markets = [
   "Forex",
@@ -169,6 +167,9 @@ export default function Home() {
   const [tradeDuration, setTradeDuration] = useState(
     "Intraday: 30 minutes–4 hours"
   );
+
+const timeframes =
+  tradeDuration === "scalp" ? scalpTimeframes : standardTimeframes;
 
   const [loading, setLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
