@@ -33,7 +33,7 @@ const loadingMessages = [
   "Preparing final decision...",
 ];
 
-const timeframes = [
+const scalpTimeframes = [
   {
     key: "daily",
     title: "Daily Chart",
@@ -62,7 +62,7 @@ const timeframes = [
     key: "m15",
     title: "15M Chart",
     description:
-      "Useful for short-term structure, liquidity and timing.",
+      "Useful for short-term structure, liquidity and execution timing.",
   },
   {
     key: "m5",
@@ -70,7 +70,49 @@ const timeframes = [
     description:
       "Best for scalping, execution timing and very short-term setups.",
   },
-] as const;
+];
+
+const standardTimeframes = [
+  {
+    key: "weekly",
+    title: "Weekly Chart",
+    description:
+      "Best for macro trend, major swing structure and long-term liquidity zones.",
+  },
+  {
+    key: "daily",
+    title: "Daily Chart",
+    description:
+      "Best for higher-timeframe bias, key support/resistance and overall market direction.",
+  },
+  {
+    key: "h4",
+    title: "4H Chart",
+    description:
+      "Useful for swing structure, pullbacks and major continuation or reversal zones.",
+  },
+  {
+    key: "h2",
+    title: "2H Chart",
+    description:
+      "Helps refine the move between higher-timeframe structure and execution context.",
+  },
+  {
+    key: "h1",
+    title: "1H Chart",
+    description:
+      "Good for intraday structure, pullbacks and confirmation zones.",
+  },
+  {
+    key: "m15",
+    title: "15M Chart",
+    description:
+      "Useful for execution timing, lower-timeframe structure and confirmation.",
+  },
+];
+
+const timeframes =
+  tradeDuration === "scalp" ? scalpTimeframes : standardTimeframes;
 
 const markets = [
   "Forex",

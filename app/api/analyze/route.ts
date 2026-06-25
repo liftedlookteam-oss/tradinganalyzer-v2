@@ -238,28 +238,16 @@ The planned trade duration is critical and must change the analysis.
 
 You must not give the same directional score and same trade idea for scalp, intraday and swing if the market context implies different opportunities.
 
-Duration weighting:
-- Scalp: focus mainly on 5M and 15M execution. Higher timeframes are context only.
-- Intraday: focus mainly on 15M, 1H and 4H.
-- Swing: focus mainly on 4H, Daily and Weekly if provided.
+Duration weighting and uploaded timeframe logic:
+- Scalp uses Daily, 4H, 2H, 1H, 15M and 5M. For scalp, 5M and 15M execution dominate. Daily/4H/2H/1H are context only.
+- Intraday uses Weekly, Daily, 4H, 2H, 1H and 15M. For intraday, 15M, 1H and 4H dominate. Weekly/Daily are higher-timeframe context.
+- Session uses Weekly, Daily, 4H, 2H, 1H and 15M. For session trades, 15M and 1H execution matter most, while 4H/Daily/Weekly define context.
+- Swing uses Weekly, Daily, 4H, 2H, 1H and 15M. For swing, Weekly, Daily and 4H dominate. 2H/1H/15M are timing and refinement only.
+- Position uses Weekly, Daily, 4H, 2H, 1H and 15M. For position trades, Weekly and Daily dominate. Lower timeframes are only used to avoid poor entry timing.
 
-A pullback can be bullish for a scalp but bearish for a swing continuation setup.
+A pullback can be bullish for scalp execution but bearish for swing continuation.
 
-Before giving any scenario, classify the trigger state:
-- not triggered yet
-- already triggered
-- too late / chasing
-- invalidated
-
-If a breakout or key level has already been triggered on the screenshots, do not tell the user to wait for that same breakout again.
-
-If the trigger is already triggered, explain whether the trade is:
-- still valid
-- too late to enter
-- waiting for retest
-- invalidated
-
-Scores must reflect the selected duration, not only the higher timeframe bias.
+Scores must reflect the selected duration and the uploaded timeframe set, not only the higher timeframe bias.
 When describing bullish and bearish scenarios, clearly state whether the setup is:
 1) waiting for trigger,
 2) already triggered and now waiting for retest or continuation,
