@@ -347,6 +347,7 @@ setCurrency(currencyDraft);
                   {week.map((cell) => {
                     const key = toDateKey(cell.date);
                     const dayTrades = tradesByDate[key] || [];
+const isToday = key === toDateKey(new Date());
                     const dayTotal = dayTrades.reduce(
                       (sum, trade) => sum + Number(trade.amount),
                       0
@@ -356,12 +357,13 @@ setCurrency(currencyDraft);
                       <button
                         key={key}
                         onClick={() => openDayTrades(cell.date, dayTrades.length)}
-                        className={`min-h-[76px] rounded-2xl border p-2 text-left text-sm transition md:min-h-[92px] md:p-3 ${getDayClass(
-                          dayTotal,
-                          dayTrades.length
-                        )} ${!cell.inCurrentMonth ? "opacity-45" : ""} ${
-                          dayTrades.length > 0 ? "cursor-pointer" : "cursor-default"
-                        }`}
+                        className={`min-h-[76px] rounded-2xl border p-2 text-left text-sm transition md:min-h-[92px] md:p-3 ${
+  isToday
+    ? "border-blue-400 ring-1 ring-blue-400/70"
+    : getDayClass(dayTotal, dayTrades.length)
+} ${!cell.inCurrentMonth ? "opacity-45" : ""} ${
+  dayTrades.length > 0 ? "cursor-pointer" : "cursor-default"
+}`}
                       >
                         <div className="font-semibold">{cell.date.getDate()}</div>
 
