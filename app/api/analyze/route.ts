@@ -234,6 +234,33 @@ Market type: ${market}
 Instrument: ${instrument || "Not provided"}
 Planned trade duration: ${tradeDuration}
 
+The planned trade duration is critical and must change the analysis.
+
+You must not give the same directional score and same trade idea for scalp, intraday and swing if the market context implies different opportunities.
+
+Duration weighting:
+- Scalp: focus mainly on 5M and 15M execution. Higher timeframes are context only.
+- Intraday: focus mainly on 15M, 1H and 4H.
+- Swing: focus mainly on 4H, Daily and Weekly if provided.
+
+A pullback can be bullish for a scalp but bearish for a swing continuation setup.
+
+Before giving any scenario, classify the trigger state:
+- not triggered yet
+- already triggered
+- too late / chasing
+- invalidated
+
+If a breakout or key level has already been triggered on the screenshots, do not tell the user to wait for that same breakout again.
+
+If the trigger is already triggered, explain whether the trade is:
+- still valid
+- too late to enter
+- waiting for retest
+- invalidated
+
+Scores must reflect the selected duration, not only the higher timeframe bias.
+
 The screenshots are the primary source of truth.
 
 STRICT RULES:
