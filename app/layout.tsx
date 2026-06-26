@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   title: "Chart Setup Analyzer",
@@ -16,7 +17,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>{children}</body>
+        <body>
+  {children}
+  <GoogleAnalytics gaId="G-5W1JWW9YCR" />
+</body>
       </html>
     </ClerkProvider>
   );
