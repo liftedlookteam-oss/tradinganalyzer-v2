@@ -9,10 +9,38 @@ export default function PricingPage() {
   null
 );
 
-const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
 
   async function startCheckout(plan: "weekly" | "monthly") {
-  setShowLaunchingSoon(true);
+  if (!isSignedIn) {
+    window.location.href = "/sign-in?redirect_url=/pricing";
+    return;
+  }
+
+  try {
+    setLoadingPlan(plan);
+
+    const response = await fetch("/api/stripe/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ plan }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.url) {
+      alert(data.error || "Unable to start checkout.");
+      return;
+    }
+
+    window.location.href = data.url;
+  } catch (error) {
+    console.error("CHECKOUT_ERROR:", error);
+    alert("Unable to start checkout. Please try again.");
+  } finally {
+    setLoadingPlan(null);
+  }
 }
 
   return (
@@ -44,8 +72,8 @@ const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-6 md:text-lg md:leading-8">
-            Free users get one analysis every 24 hours. Pro subscriptions are
-            launching soon.
+            Free users get one analysis every 24 hours. Upgrade to Pro for
+unlimited analyses and full history access.
           </p>
         </section>
 
@@ -96,6 +124,7 @@ const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
 
           <button
             onClick={() => startCheckout("weekly")}
+disabled={loadingPlan !== null}
             className="rounded-[2rem] border border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
           >
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
@@ -119,12 +148,13 @@ const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-              Launching Soon
-            </div>
+  {loadingPlan === "weekly" ? "Redirecting..." : "Choose Weekly"}
+</div>
           </button>
 
           <button
             onClick={() => startCheckout("monthly")}
+disabled={loadingPlan !== null}
             className="relative rounded-[2rem] border-2 border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
           >
             <div className="absolute right-6 top-6 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
@@ -152,8 +182,8 @@ const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
             </div>
 
             <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-              Launching Soon
-            </div>
+  {loadingPlan === "monthly" ? "Redirecting..." : "Choose Monthly"}
+</div>
           </button>
         </section>
 
@@ -168,31 +198,7 @@ const [showLaunchingSoon, setShowLaunchingSoon] = useState(false);
           </p>
         </section>
       </div>
-{showLaunchingSoon && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
-    <div className="w-full max-w-md rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 text-white shadow-2xl">
-      <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-        Launching Soon
-      </p>
 
-      <h2 className="mt-3 text-3xl font-bold">
-        Pro subscriptions are launching soon
-      </h2>
-
-      <p className="mt-4 leading-7 text-zinc-400">
-        Free users can continue using 1 analysis every 24 hours while we
-        prepare live payments.
-      </p>
-
-      <button
-        onClick={() => setShowLaunchingSoon(false)}
-        className="mt-6 w-full rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-zinc-200"
-      >
-        Got it
-      </button>
-    </div>
-  </div>
-)}
     </main>
   );
 }
