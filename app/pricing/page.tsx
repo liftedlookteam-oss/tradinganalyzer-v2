@@ -19,7 +19,7 @@ export default function PricingPage() {
   try {
     setLoadingPlan(plan);
 
-    const response = await fetch("/api/stripe/create-checkout-session", {
+    const response = await fetch("/api/checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
