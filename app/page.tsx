@@ -118,7 +118,7 @@ const markets = [
   "Futures",
   "Stocks",
   "Options",
-  "Indices",
+  "Index",
   "Commodities",
 ];
 
@@ -144,9 +144,9 @@ const tradeDurations = [
     description: "1–5 days",
   },
   {
-    value: "Position: several days/weeks",
+    value: "Position: several weeks/months",
     label: "Position",
-    description: "Several days/weeks",
+    description: "Several weeks/months",
   },
 ];
 

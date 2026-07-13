@@ -24,6 +24,7 @@ export default function TradingDashboard() {
   const { isLoaded, isSignedIn } = useUser();
 
   const [currentDate, setCurrentDate] = useState(new Date());
+const [today, setToday] = useState<Date | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [startingBalance, setStartingBalance] = useState(0);
   const [currency, setCurrency] = useState("USD");
@@ -52,6 +53,20 @@ const [isSavingBalance, setIsSavingBalance] = useState(false);
 
     loadDashboard();
   }, [isLoaded, isSignedIn]);
+
+useEffect(() => {
+  const updateToday = () => {
+    setToday(new Date());
+  };
+
+  updateToday();
+
+  const interval = window.setInterval(updateToday, 60_000);
+
+  return () => {
+    window.clearInterval(interval);
+  };
+}, []);
 
   async function loadDashboard() {
     try {
@@ -347,7 +362,7 @@ setCurrency(currencyDraft);
                   {week.map((cell) => {
                     const key = toDateKey(cell.date);
                     const dayTrades = tradesByDate[key] || [];
-const isToday = key === toDateKey(new Date());
+const isToday = today !== null && key === toDateKey(today);
                     const dayTotal = dayTrades.reduce(
                       (sum, trade) => sum + Number(trade.amount),
                       0
