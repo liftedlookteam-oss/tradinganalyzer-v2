@@ -518,7 +518,7 @@ if (response.status === 401) {
 
   return (
     <>
-      <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
+      <main className="min-h-screen bg-[#050505] px-3 py-4 text-white md:px-6 md:py-10">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -582,7 +582,7 @@ if (response.status === 401) {
             </div>
           </header>
 
-          <section className="mb-6 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900 p-5 shadow-2xl md:mb-10 md:p-8">
+          <section className="mb-4 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900 p-4 shadow-2xl md:mb-10 md:p-8">
             <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
               <div className="max-w-4xl">
                 <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
@@ -615,7 +615,7 @@ if (response.status === 401) {
             </div>
           </section>
 
-          <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <section className="mb-4 rounded-3xl border border-zinc-800 bg-zinc-950 p-4 md:mb-6 md:p-6">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-2xl font-bold">
@@ -652,8 +652,8 @@ if (response.status === 401) {
             </div>
           </section>
 
-          <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <div className="mb-5">
+          <section className="mb-4 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+            <div className="mb-4">
               <h2 className="text-2xl font-bold">Planned Trade Duration</h2>
 
               <p className="mt-2 text-zinc-400">
@@ -689,7 +689,7 @@ if (response.status === 401) {
             </div>
           </section>
 
-          <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <section className="mb-4 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
             <input
               value={instrument}
               onChange={(event) => setInstrument(event.target.value)}
