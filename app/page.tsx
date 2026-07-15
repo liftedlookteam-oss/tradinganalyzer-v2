@@ -37,36 +37,42 @@ const scalpTimeframes = [
   {
     key: "daily",
     title: "Daily Chart",
+    shortTitle: "Daily",
     description:
       "Best for macro trend, major structure and higher-timeframe bias.",
   },
   {
     key: "h4",
     title: "4H Chart",
+    shortTitle: "4H",
     description:
       "Useful for swing structure, major zones and larger liquidity areas.",
   },
   {
     key: "h2",
     title: "2H Chart",
+    shortTitle: "2H",
     description:
       "Helps refine higher-timeframe context before intraday decisions.",
   },
   {
     key: "h1",
     title: "1H Chart",
+    shortTitle: "1H",
     description:
       "Good for intraday structure, pullbacks and confirmation zones.",
   },
   {
     key: "m15",
     title: "15M Chart",
+    shortTitle: "15M",
     description:
       "Useful for short-term structure, liquidity and execution timing.",
   },
   {
     key: "m5",
     title: "5M Chart",
+    shortTitle: "5M",
     description:
       "Best for scalping, execution timing and very short-term setups.",
   },
@@ -76,36 +82,42 @@ const standardTimeframes = [
   {
     key: "weekly",
     title: "Weekly Chart",
+    shortTitle: "Weekly",
     description:
       "Best for macro trend, major swing structure and long-term liquidity zones.",
   },
   {
     key: "daily",
     title: "Daily Chart",
+    shortTitle: "Daily",
     description:
       "Best for higher-timeframe bias, key support/resistance and overall market direction.",
   },
   {
     key: "h4",
     title: "4H Chart",
+    shortTitle: "4H",
     description:
       "Useful for swing structure, pullbacks and major continuation or reversal zones.",
   },
   {
     key: "h2",
     title: "2H Chart",
+    shortTitle: "2H",
     description:
       "Helps refine the move between higher-timeframe structure and execution context.",
   },
   {
     key: "h1",
     title: "1H Chart",
+    shortTitle: "1H",
     description:
       "Good for intraday structure, pullbacks and confirmation zones.",
   },
   {
     key: "m15",
     title: "15M Chart",
+    shortTitle: "15M",
     description:
       "Useful for execution timing, lower-timeframe structure and confirmation.",
   },
