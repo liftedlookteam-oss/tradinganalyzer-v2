@@ -633,12 +633,12 @@ if (response.status === 401) {
                   {uploadedCount}/6 timeframes uploaded
                 </div>
 
-                <div className="flex max-w-[calc(100vw-72px)] gap-2 overflow-x-auto pb-2 md:max-w-none md:flex-wrap md:justify-end md:overflow-visible md:pb-0">
+                <div className="flex flex-wrap gap-2 md:justify-end">
   {markets.map((item) => (
                     <button
                       key={item}
                       onClick={() => setMarket(item)}
-                      className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
                         market === item
                           ? "bg-white text-black"
                           : "bg-black text-zinc-400 hover:text-white"
@@ -662,12 +662,12 @@ if (response.status === 401) {
               </p>
             </div>
 
-           <div className="flex gap-3 overflow-x-auto pb-3 md:grid md:grid-cols-5 md:overflow-visible md:pb-0">
+           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
   {tradeDurations.map((item) => (
                 <button
                   key={item.value}
                   onClick={() => setTradeDuration(item.value)}
-                  className={`w-[210px] shrink-0 rounded-2xl border px-4 py-4 text-left transition md:w-auto ${
+                  className={`rounded-2xl border px-4 py-4 text-left transition ${
                     tradeDuration === item.value
                       ? "border-white bg-white text-black"
                       : "border-zinc-800 bg-black text-zinc-300 hover:border-zinc-500"
@@ -698,7 +698,7 @@ if (response.status === 401) {
             />
           </section>
 
-          <section className="flex gap-3 overflow-x-auto pb-3 md:grid md:grid-cols-2 md:overflow-visible md:pb-0 lg:grid-cols-3 xl:grid-cols-6 md:gap-5">
+          <section className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3 xl:grid-cols-6">
             {timeframes.map((timeframe) => (
               <UploadBox
                 key={timeframe.key}
@@ -991,7 +991,7 @@ function UploadBox({
   const previewUrl = file ? URL.createObjectURL(file) : null;
 
   return (
-    <label className="w-[210px] shrink-0 md:w-auto flex min-h-[190px] cursor-pointer flex-col justify-between rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-4 transition hover:border-white hover:bg-zinc-900 md:min-h-[260px] md:rounded-3xl md:p-5">
+    <label className="flex min-h-[190px] cursor-pointer flex-col justify-between rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-4 transition hover:border-white hover:bg-zinc-900 md:min-h-[260px] md:rounded-3xl md:p-5">
       <input
         type="file"
         accept="image/*"
