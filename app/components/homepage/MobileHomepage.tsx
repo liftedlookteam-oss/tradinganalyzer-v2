@@ -362,6 +362,84 @@ export default function MobileHomepage({
               : `Next free analysis in ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s`}
           </button>
 
+<section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
+  <p className="text-xs font-bold uppercase tracking-[0.28em] text-zinc-500">
+    How It Works
+  </p>
+
+  <div className="mt-6 grid grid-cols-1 gap-4">
+    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-700 text-sm font-bold">
+        1
+      </div>
+
+      <h3 className="mt-4 text-lg font-bold">
+        Upload Charts
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-zinc-400">
+        Add at least two chart screenshots from different timeframes.
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-700 text-sm font-bold">
+        2
+      </div>
+
+      <h3 className="mt-4 text-lg font-bold">
+        Choose Duration
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-zinc-400">
+        Select how long you plan to hold the trade so the analysis fits your timeframe.
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-zinc-800 bg-black p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-700 text-sm font-bold">
+        3
+      </div>
+
+      <h3 className="mt-4 text-lg font-bold">
+        Review the Decision
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-zinc-400">
+        Get structured scenarios, key levels, invalidation and a clear final decision.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
+  <p className="text-xs font-bold uppercase tracking-[0.28em] text-zinc-500">
+    Why Traders Use It
+  </p>
+
+  <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 text-sm font-semibold text-zinc-200">
+    <div className="flex items-start gap-3">
+      <span className="text-emerald-400">✓</span>
+      <span>Analysis adapts to the selected trade duration.</span>
+    </div>
+
+    <div className="flex items-start gap-3">
+      <span className="text-emerald-400">✓</span>
+      <span>Higher and lower timeframes are evaluated together.</span>
+    </div>
+
+    <div className="flex items-start gap-3">
+      <span className="text-emerald-400">✓</span>
+      <span>Bullish and bearish scenarios include clear conditions.</span>
+    </div>
+
+    <div className="flex items-start gap-3">
+      <span className="text-emerald-400">✓</span>
+      <span>WAIT and NO TRADE remain valid outcomes.</span>
+    </div>
+  </div>
+</section>
+
           <footer className="mt-8 border-t border-zinc-900 pt-5 text-center text-sm text-zinc-600">
             <div className="flex justify-center gap-5">
               <a href="/pricing">
