@@ -22,7 +22,7 @@ export default function HistoryCard({
   const state = item.analysis?.marketState || "Unknown";
 
   return (
-    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6 transition hover:border-zinc-600">
+    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-zinc-600 md:p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -35,39 +35,39 @@ export default function HistoryCard({
             <Tag muted>{formatDate(date)}</Tag>
           </div>
 
-          <h2 className="mt-5 text-3xl font-bold">
+          <h2 className="mt-4 text-2xl font-bold leading-tight md:mt-5 md:text-3xl">
             {item.instrument || item.market} Analysis
           </h2>
 
-          <p className="mt-2 text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-500 md:text-base">
             {item.trade_duration}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-3">
           <a
             href={`/history/${item.id}`}
-            className="rounded-2xl bg-white px-4 py-2 text-sm font-bold text-black transition hover:bg-zinc-200"
+            className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-zinc-200 lg:py-2"
           >
             Open Analysis
           </a>
 
           <button
             onClick={onDelete}
-            className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20"
+            className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20 lg:py-2"
           >
             Delete
           </button>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 md:mt-6 md:grid-cols-3 md:gap-4">
         <Metric label="Bias" value={bias} />
         <Metric label="Quality" value={quality} />
         <Metric label="Market State" value={state} />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 md:mt-6 lg:grid-cols-2 lg:gap-5">
         <ScoreCard
           type="bullish"
           score={item.analysis?.bullishScore || 0}
@@ -79,7 +79,7 @@ export default function HistoryCard({
         />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 md:mt-6 lg:grid-cols-2 lg:gap-5">
         <TextPanel
           title="Most Important Thing"
           value={

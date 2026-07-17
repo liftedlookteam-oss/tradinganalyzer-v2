@@ -36,90 +36,85 @@ export default function MobileHistory({
   onDeleteConfirm,
 }: MobileHistoryProps) {
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-6 text-white">
-      <div className="mx-auto max-w-md">
-        <header className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
-            Saved Analyses
-          </p>
+    <main className="min-h-screen bg-[#050505] text-white pb-10">
+      <div className="px-5 pt-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
+          Saved Analyses
+        </p>
 
-          <h1 className="mt-2 text-4xl font-bold">
-            Analysis History
-          </h1>
+        <h1 className="mt-2 text-4xl font-bold leading-tight">
+          Analysis History
+        </h1>
 
-          <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Review previous analyses and revisit important trading decisions.
-          </p>
+        <p className="mt-3 text-sm leading-6 text-zinc-400">
+          Review previous analyses and quickly revisit your trading decisions.
+        </p>
+      </div>
 
-          <div className="mt-5 flex gap-3">
-            <a
-              href="/account"
-              className="flex-1 rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-center text-sm font-bold text-zinc-200"
-            >
-              Account
-            </a>
+      <div className="mt-6 flex gap-3 px-5">
+        <a
+          href="/"
+          className="flex-1 rounded-2xl bg-white py-3 text-center font-semibold text-black"
+        >
+          New Analysis
+        </a>
 
-            <a
-              href="/"
-              className="flex-1 rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-black"
-            >
-              New Analysis
-            </a>
-          </div>
-        </header>
+        <a
+          href="/account"
+          className="flex-1 rounded-2xl border border-zinc-700 bg-zinc-900 py-3 text-center font-semibold"
+        >
+          Account
+        </a>
+      </div>
 
-        <section className="mb-6 grid gap-3">
-          <SummaryCard
-            label="Total Analyses"
-            value={String(totalAnalyses)}
+      <div className="mt-6 grid gap-3 px-5">
+        <SummaryCard
+          label="Total"
+          value={String(totalAnalyses)}
+        />
+
+        <SummaryCard
+          label="Visible"
+          value={String(filteredItems.length)}
+        />
+      </div>
+
+      <div className="mt-6 px-5">
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+          <input
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search analyses..."
+            className="w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 outline-none placeholder:text-zinc-600 focus:border-white"
           />
 
-          <SummaryCard
-            label="Visible Results"
-            value={String(filteredItems.length)}
-          />
+          <select
+            value={filter}
+            onChange={(e) => onFilterChange(e.target.value)}
+            className="mt-3 w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 outline-none focus:border-white"
+          >
+            <option>All</option>
+            <option>Bullish</option>
+            <option>Bearish</option>
+            <option>Neutral</option>
+            <option>Unclear</option>
+          </select>
+        </div>
+      </div>
 
-          <SummaryCard
-            label="Storage"
-            value="Private history"
-          />
-        </section>
-
-        <section className="mb-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="space-y-3">
-            <input
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search..."
-              className="w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-white outline-none placeholder:text-zinc-600 focus:border-white"
-            />
-
-            <select
-              value={filter}
-              onChange={(e) => onFilterChange(e.target.value)}
-              className="w-full rounded-2xl border border-zinc-800 bg-black px-4 py-3 text-white outline-none focus:border-white"
-            >
-              <option>All</option>
-              <option>Bullish</option>
-              <option>Bearish</option>
-              <option>Neutral</option>
-              <option>Unclear</option>
-            </select>
-          </div>
-        </section>
-
+      <div className="mt-6 px-5">
         {loading ? (
           <EmptyState
-            title="Loading history..."
-            text="Fetching your saved analyses."
+            title="Loading..."
+            text="Fetching analyses."
           />
         ) : filteredItems.length === 0 ? (
           <EmptyState
-            title="No analyses found"
-            text="Run a new analysis or adjust your search."
+            title="No analyses"
+            text="Run a new analysis to get started."
           />
         ) : (
-          <section className="space-y-4">
+          <div className="space-y-4">
             {filteredItems.map((item) => (
               <HistoryCard
                 key={item.id}
@@ -127,7 +122,7 @@ export default function MobileHistory({
                 onDelete={() => onDeleteRequest(item)}
               />
             ))}
-          </section>
+          </div>
         )}
       </div>
 
