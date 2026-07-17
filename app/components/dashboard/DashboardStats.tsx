@@ -28,7 +28,7 @@ export default function DashboardStats({
   formatMoney,
 }: DashboardStatsProps) {
   return (
-    <section className="grid grid-cols-2 gap-4 xl:grid-cols-4"
+    <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
       <StatCard
         label="Account Balance"
         value={formatMoney(currentBalance, currency)}
