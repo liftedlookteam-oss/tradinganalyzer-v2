@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import FeatureCard from "../components/pricing/FeatureCard";
+import PlanItem from "../components/pricing/PlanItem";
+import PlanCard from "../components/pricing/PlanCard";
 
 export default function PricingPage() {
   const { isSignedIn } = useUser();
@@ -44,40 +47,40 @@ export default function PricingPage() {
 }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
+   <main className="min-h-screen bg-[#050505] px-4 py-4 text-white sm:py-5 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-10 flex items-center justify-between">
+        <header className="mb-6 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
           <a
             href="/"
-            className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-center text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white sm:w-auto"
           >
             Back to Analyzer
           </a>
 
           <a
             href="/account"
-            className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
+           className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-center text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white sm:w-auto"
           >
             Account
           </a>
         </header>
 
-        <section className="mb-6 rounded-[2rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-5 md:mb-10 md:p-8">
+       <section className="mb-6 rounded-[1.5rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-5 sm:rounded-[2rem] md:mb-10 md:p-8">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
             ChartSetup Pro
           </p>
 
-          <h1 className="max-w-4xl text-3xl font-bold tracking-tight md:text-6xl">
+         <h1 className="max-w-4xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-6xl">
             Unlimited AI chart analysis for disciplined traders.
           </h1>
 
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 md:mt-6 md:text-lg md:leading-8">
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 sm:text-base md:mt-6 md:text-lg md:leading-8">
             Free users get one analysis every 24 hours. Upgrade to Pro for
 unlimited analyses and full history access.
           </p>
         </section>
 
-        <section className="mb-6 grid gap-3 md:mb-8 md:grid-cols-3 md:gap-5">
+       <section className="mb-6 grid gap-4 sm:grid-cols-2 md:mb-8 lg:grid-cols-3 lg:gap-5">
           <FeatureCard
             title="No blind signals"
             text="The platform focuses on market structure, scenarios and conditions instead of random buy or sell calls."
@@ -93,15 +96,19 @@ unlimited analyses and full history access.
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          <div className="rounded-[2rem] border border-white bg-white p-5 text-black md:p-7">
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
-              Free
-            </p>
-
-            <div className="mt-5 flex items-end gap-2">
-              <p className="text-5xl font-bold">€0</p>
-              <p className="mb-2 text-zinc-600">/ day</p>
-            </div>
+          <PlanCard
+  title="Free"
+  price="€0"
+  period="day"
+  description="One AI analysis every 24 hours. Best for testing the workflow and checking occasional setups."
+  features={[
+    "1 analysis every 24h",
+    "Saved analysis history",
+    "Core AI decision support",
+  ]}
+  buttonText="Continue Free"
+  href="/"
+/>
 
             <p className="mt-5 leading-8 text-zinc-700">
               One AI analysis every 24 hours. Best for testing the workflow and
@@ -122,77 +129,46 @@ unlimited analyses and full history access.
             </a>
           </div>
 
-          <button
-            onClick={() => startCheckout("weekly")}
-disabled={loadingPlan !== null}
-            className="rounded-[2rem] border border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
-              Pro Weekly
-            </p>
-
-            <div className="mt-5 flex items-end gap-2">
-              <p className="text-5xl font-bold">€4.99</p>
-              <p className="mb-2 text-zinc-600">/ week</p>
-            </div>
-
-            <p className="mt-5 leading-8 text-zinc-700">
-              Flexible Pro access for traders who want unlimited analysis
-              without committing monthly.
-            </p>
-
-            <div className="mt-7 space-y-3">
-              <PlanItem text="Unlimited analyses" />
-              <PlanItem text="Full history access" />
-              <PlanItem text="Priority analysis processing" />
-            </div>
-
-            <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-  {loadingPlan === "weekly" ? "Redirecting..." : "Choose Weekly"}
-</div>
-          </button>
-
-          <button
-            onClick={() => startCheckout("monthly")}
-disabled={loadingPlan !== null}
-            className="relative rounded-[2rem] border-2 border-white bg-white p-5 text-left text-black transition hover:bg-zinc-200 md:p-7"
-          >
-            <div className="absolute right-6 top-6 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
-              Best Value
-            </div>
-
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-600">
-              Pro Monthly
-            </p>
-
-            <div className="mt-5 flex items-end gap-2">
-              <p className="text-5xl font-bold">€14.99</p>
-              <p className="mb-2 text-zinc-600">/ month</p>
-            </div>
-
-            <p className="mt-5 leading-8 text-zinc-700">
-              Best for active traders who review setups regularly and want a
-              clean daily workflow.
-            </p>
-
-            <div className="mt-7 space-y-3">
-              <PlanItem text="Unlimited analyses" />
-              <PlanItem text="Full history access" />
-              <PlanItem text="Priority analysis processing" />
-            </div>
-
-            <div className="mt-8 rounded-2xl bg-black px-5 py-4 text-center font-bold text-white">
-  {loadingPlan === "monthly" ? "Redirecting..." : "Choose Monthly"}
-</div>
-          </button>
+          <PlanCard
+  title="Pro Weekly"
+  price="€4.99"
+  period="week"
+  description="Flexible Pro access for traders who want unlimited analysis without committing monthly."
+  features={[
+    "Unlimited analyses",
+    "Full history access",
+    "Priority analysis processing",
+  ]}
+  buttonText="Choose Weekly"
+  onClick={() => startCheckout("weekly")}
+  loading={loadingPlan === "weekly"}
+  disabled={loadingPlan !== null}
+/>
+         <PlanCard
+  title="Pro Monthly"
+  price="€14.99"
+  period="month"
+  description="Best for active traders who review setups regularly and want a clean daily workflow."
+  features={[
+    "Unlimited analyses",
+    "Full history access",
+    "Priority analysis processing",
+  ]}
+  buttonText="Choose Monthly"
+  onClick={() => startCheckout("monthly")}
+  loading={loadingPlan === "monthly"}
+  disabled={loadingPlan !== null}
+  featured
+  badge="Best Value"
+/>
         </section>
 
-        <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+        <section className="mt-6 rounded-[1.5rem] border border-zinc-800 bg-zinc-950 p-5 sm:mt-8 sm:rounded-3xl sm:p-6">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
             Important
           </p>
 
-          <p className="mt-3 leading-8 text-zinc-400">
+          <p className="mt-3 text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
             ChartSetup Analyzer is a decision-support tool. It does not provide
             financial advice, guaranteed outcomes or blind trade signals.
           </p>
@@ -200,26 +176,5 @@ disabled={loadingPlan !== null}
       </div>
 
     </main>
-  );
-}
-
-function FeatureCard({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-      <h2 className="text-2xl font-bold">{title}</h2>
-      <p className="mt-3 leading-7 text-zinc-400">{text}</p>
-    </div>
-  );
-}
-
-function PlanItem({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
-        ✓
-      </div>
-
-      <p className="font-semibold text-black">{text}</p>
-    </div>
   );
 }
