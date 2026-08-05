@@ -23,10 +23,10 @@ export default function DayTradesModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6">
-        <div className="flex items-center justify-between">
+      <div className="w-full max-w-2xl rounded-[2rem] border border-zinc-700 bg-zinc-950 p-6 text-white shadow-2xl">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold">
+            <h2 className="text-3xl font-bold text-white">
               {selectedDay.toLocaleDateString(undefined, {
                 day: "numeric",
                 month: "long",
@@ -40,8 +40,9 @@ export default function DayTradesModal({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-2xl border border-zinc-700 px-4 py-2 text-sm font-bold"
+            className="rounded-2xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition hover:border-zinc-400 hover:bg-zinc-800"
           >
             Close
           </button>
@@ -51,13 +52,15 @@ export default function DayTradesModal({
           {selectedDayTrades.map((trade) => (
             <div
               key={trade.id}
-              className="rounded-2xl border border-zinc-800 bg-black p-4"
+              className="rounded-2xl border border-zinc-700 bg-zinc-900/60 p-4"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-lg font-bold">{trade.asset}</p>
+                  <p className="text-lg font-bold text-white">
+                    {trade.asset}
+                  </p>
 
-                  <p className="mt-1 text-sm uppercase tracking-[0.2em] text-zinc-500">
+                  <p className="mt-1 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
                     {trade.result}
                   </p>
                 </div>
@@ -76,7 +79,7 @@ export default function DayTradesModal({
               </div>
 
               {trade.notes && (
-                <p className="mt-3 text-sm text-zinc-400">
+                <p className="mt-3 text-sm leading-6 text-zinc-400">
                   {trade.notes}
                 </p>
               )}
@@ -84,7 +87,7 @@ export default function DayTradesModal({
           ))}
 
           {selectedDayTrades.length === 0 && (
-            <div className="rounded-2xl border border-zinc-800 bg-black p-5 text-zinc-400">
+            <div className="rounded-2xl border border-zinc-700 bg-zinc-900/60 p-5 text-zinc-400">
               No trades logged for this day.
             </div>
           )}
