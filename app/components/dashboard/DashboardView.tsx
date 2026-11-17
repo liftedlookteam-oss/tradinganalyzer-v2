@@ -12,6 +12,17 @@ export type WeekSummary = {
 };
 
 export type DashboardViewProps = {
+  editingTrade: boolean;
+  tradeDate: string;
+  onTradeDateChange: (date: string) => void;
+  tradeError: string;
+  balanceError: string;
+  loadError: string;
+  onRetry: () => void;
+  dayError: string;
+  deletingTrade: boolean;
+  onEditTrade: (trade: Trade) => void;
+  onDeleteTrade: (trade: Trade) => void;
   currentDate: Date;
   today: Date | null;
   trades: Trade[];

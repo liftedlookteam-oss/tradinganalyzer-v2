@@ -3,6 +3,10 @@
 import type { Trade } from "./types";
 
 type DayTradesModalProps = {
+  error: string;
+  deleting: boolean;
+  onEdit: (trade: Trade) => void;
+  onDelete: (trade: Trade) => void;
   open: boolean;
   selectedDay: Date | null;
   selectedDayTrades: Trade[];
@@ -12,6 +16,10 @@ type DayTradesModalProps = {
 };
 
 export default function DayTradesModal({
+  error,
+  deleting,
+  onEdit,
+  onDelete,
   open,
   selectedDay,
   selectedDayTrades,
@@ -48,7 +56,8 @@ export default function DayTradesModal({
           </button>
         </div>
 
-        <div className="mt-6 space-y-3">
+        {error && <p role="alert" className="mt-3 text-red-300">{error}</p>}
+        <div className="mt-6 max-h-[60vh] space-y-3 overflow-y-auto">
           {selectedDayTrades.map((trade) => (
             <div
               key={trade.id}
@@ -78,6 +87,10 @@ export default function DayTradesModal({
                 </p>
               </div>
 
+              <div className="mt-3 flex gap-4 text-sm">
+                <button disabled={deleting} onClick={() => onEdit(trade)} className="underline">Edit</button>
+                <button disabled={deleting} onClick={() => onDelete(trade)} className="text-red-300 underline">Delete</button>
+              </div>
               {trade.notes && (
                 <p className="mt-3 text-sm leading-6 text-zinc-400">
                   {trade.notes}

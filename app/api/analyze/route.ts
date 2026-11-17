@@ -8,6 +8,7 @@ const openai = new OpenAI({
 });
 
 const timeframeLabels: Record<string, string> = {
+  weekly: "Weekly",
   daily: "Daily",
   h4: "4H",
   h2: "2H",
@@ -185,6 +186,7 @@ export async function POST(request: Request) {
       ) as string;
 
     const imageInputs = [];
+    let totalImageBytes = 0;
 
     for (const key of Object.keys(
       timeframeLabels
@@ -193,7 +195,15 @@ export async function POST(request: Request) {
         key
       ) as File | null;
 
-      if (image && image.size > 0) {
+      if (image instanceof File && image.size > 0) {
+        totalImageBytes += image.size;
+        if (!["image/png", "image/jpeg", "image/webp"].includes(image.type) ||
+            image.size > 2_000_000 || totalImageBytes > 4_000_000) {
+          return Response.json(
+            { error: "Use PNG, JPEG or WebP images up to 2 MB each and 4 MB total." },
+            { status: 400 }
+          );
+        }
         const bytes =
           await image.arrayBuffer();
 

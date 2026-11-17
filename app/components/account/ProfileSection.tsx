@@ -5,10 +5,12 @@ import SectionHeader from "./SectionHeader";
 
 type ProfileSectionProps = {
   email: string;
+  memberSince?: string;
 };
 
 export default function ProfileSection({
   email,
+  memberSince,
 }: ProfileSectionProps) {
   return (
     <div>
@@ -25,7 +27,7 @@ export default function ProfileSection({
 
         <InfoCard
           label="Member Since"
-          value="Active user"
+          value={memberSince ?? "Unavailable"}
         />
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 type BalanceModalProps = {
+  error: string;
   open: boolean;
   isSaving: boolean;
   balanceDraft: number;
@@ -13,6 +14,7 @@ type BalanceModalProps = {
 };
 
 export default function BalanceModal({
+  error,
   open,
   isSaving,
   balanceDraft,
@@ -65,6 +67,7 @@ export default function BalanceModal({
           ))}
         </select>
 
+        {error && <p role="alert" className="mt-3 text-red-300">{error}</p>}
         <div className="mt-5 flex gap-3">
           <button
             type="button"

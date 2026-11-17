@@ -4,19 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import DashboardView from "@/app/components/dashboard/DashboardView";
 
-type Trade = {
-  id: string;
-  asset: string;
-  result: "win" | "loss" | "breakeven";
-  amount: number;
-  notes?: string | null;
-  trade_date: string;
-};
-
-type CalendarCell = {
-  date: Date;
-  inCurrentMonth: boolean;
-};
+import type { CalendarCell, Trade } from "@/app/components/dashboard/types";
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const currencies = ["USD", "EUR", "GBP"];
@@ -43,6 +31,13 @@ const [isSavingBalance, setIsSavingBalance] = useState(false);
   const [result, setResult] = useState<"win" | "loss" | "breakeven">("win");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [tradeDate, setTradeDate] = useState("");
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+  const [tradeError, setTradeError] = useState("");
+  const [dayError, setDayError] = useState("");
+  const [deletingTrade, setDeletingTrade] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [balanceError, setBalanceError] = useState("");
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -70,12 +65,14 @@ useEffect(() => {
 }, []);
 
   async function loadDashboard() {
+    setLoadError("");
     try {
       const [tradesResponse, accountResponse] = await Promise.all([
         fetch("/api/trades"),
         fetch("/api/trading-account"),
       ]);
 
+      if (!tradesResponse.ok || !accountResponse.ok) throw new Error("Dashboard request failed");
       const tradesData = await tradesResponse.json();
       const accountData = await accountResponse.json();
 
@@ -83,74 +80,86 @@ useEffect(() => {
       setStartingBalance(Number(accountData.account?.starting_balance || 0));
       setCurrency(accountData.account?.currency || "USD");
     } catch {
-      console.error("Failed to load dashboard.");
+      setLoadError("Could not load your trading data.");
     }
+  }
+
+  function openTrade(trade: Trade | null = null) {
+    setEditingTrade(trade);
+    setAsset(trade?.asset ?? "");
+    setResult(trade?.result ?? "win");
+    setAmount(trade ? String(Math.abs(Number(trade.amount))) : "");
+    setNotes(trade?.notes ?? "");
+    setTradeDate(trade?.trade_date ?? toDateKey(new Date()));
+    setTradeError("");
+    setShowTradeModal(true);
   }
 
   async function saveTrade() {
-if (isSavingTrade) return;
-setIsSavingTrade(true);
-    if (!asset.trim() || !amount) return;
-
-    const rawAmount = Math.abs(Number(amount));
-    const signedAmount =
-      result === "loss" ? -rawAmount : result === "breakeven" ? 0 : rawAmount;
-
-    const response = await fetch("/api/trades", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        asset: asset.trim().toUpperCase(),
-        result,
-        amount: signedAmount,
-        notes,
-        trade_date: toDateKey(new Date()),
-      }),
-    });
-
-   if (!response.ok) {
-  alert("Failed to save trade.");
-  setIsSavingTrade(false);
-  return;
-}
-
-setAsset("");
-setResult("win");
-setAmount("");
-setNotes("");
-setShowTradeModal(false);
-setIsSavingTrade(false);
-loadDashboard();
-  }
-
-  async function saveBalance() {
-if (isSavingBalance) return;
-setIsSavingBalance(true);
-    const response = await fetch("/api/trading-account", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        starting_balance: balanceDraft,
-currency: currencyDraft,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      alert(errorData?.error || "Failed to save balance.");
-setIsSavingBalance(false);
+    if (isSavingTrade) return;
+    const numericAmount = result === "breakeven" ? 0 : Number(amount);
+    if (!asset.trim() || !tradeDate || !Number.isFinite(numericAmount) ||
+        (result !== "breakeven" && numericAmount <= 0)) {
+      setTradeError("Enter an asset, a date and a positive amount for a win or loss.");
       return;
     }
 
-    setShowBalanceModal(false);
-setIsSavingBalance(false);
-loadDashboard();
-setStartingBalance(balanceDraft);
-setCurrency(currencyDraft);
+    setTradeError("");
+    setIsSavingTrade(true);
+    try {
+      const response = await fetch("/api/trades", {
+        method: editingTrade ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingTrade?.id, asset, result, amount: numericAmount, notes, trade_date: tradeDate,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not save the trade.");
+      setTrades((previous) => [data.trade, ...previous.filter((trade) => trade.id !== data.trade.id)]);
+      setCurrentDate(new Date(`${tradeDate}T12:00:00`));
+      setShowTradeModal(false);
+    } catch (error) {
+      setTradeError(error instanceof Error ? error.message : "Could not save the trade.");
+    } finally {
+      setIsSavingTrade(false);
+    }
+  }
+
+  async function deleteTrade(trade: Trade) {
+    if (deletingTrade || !window.confirm(`Delete the ${trade.asset} trade?`)) return;
+    setDeletingTrade(true);
+    setDayError("");
+    try {
+      const response = await fetch(`/api/trades?id=${encodeURIComponent(trade.id)}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Delete failed");
+      setTrades((previous) => previous.filter((item) => item.id !== trade.id));
+    } catch {
+      setDayError("Could not delete the trade. Please try again.");
+    } finally {
+      setDeletingTrade(false);
+    }
+  }
+
+  async function saveBalance() {
+    if (isSavingBalance) return;
+    setIsSavingBalance(true);
+    setBalanceError("");
+    try {
+      const response = await fetch("/api/trading-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ starting_balance: balanceDraft, currency: currencyDraft }),
+      });
+      if (!response.ok) throw new Error("Save failed");
+      setStartingBalance(balanceDraft);
+      setCurrency(currencyDraft);
+      setShowBalanceModal(false);
+    } catch {
+      setBalanceError("Could not save the balance. Please try again.");
+    } finally {
+      setIsSavingBalance(false);
+    }
   }
 
   const calendarDays = useMemo(() => buildCalendar(currentDate), [currentDate]);
@@ -216,6 +225,7 @@ setCurrency(currencyDraft);
 
   function openDayTrades(date: Date, tradeCount: number) {
     if (tradeCount === 0) return;
+    setDayError("");
     setSelectedDay(date);
     setShowDayTradesModal(true);
   }
@@ -254,9 +264,21 @@ setCurrency(currencyDraft);
     onPreviousMonth={previousMonth}
     onNextMonth={nextMonth}
     onToday={() => setCurrentDate(new Date())}
-    onOpenTradeModal={() => setShowTradeModal(true)}
+    onOpenTradeModal={() => openTrade()}
+    onEditTrade={openTrade}
+    editingTrade={Boolean(editingTrade)}
+    tradeDate={tradeDate}
+    onTradeDateChange={setTradeDate}
+    tradeError={tradeError}
+    dayError={dayError}
+    deletingTrade={deletingTrade}
+    onDeleteTrade={deleteTrade}
+    loadError={loadError}
+    onRetry={loadDashboard}
+    balanceError={balanceError}
     onCloseTradeModal={() => setShowTradeModal(false)}
     onOpenBalanceModal={() => {
+      setBalanceError("");
       setBalanceDraft(startingBalance);
       setCurrencyDraft(currency);
       setShowBalanceModal(true);

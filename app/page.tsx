@@ -196,6 +196,7 @@ const timeframes =
 
   const [unlimitedAnalysis, setUnlimitedAnalysis] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [usageError, setUsageError] = useState(false);
   const [usageLoaded, setUsageLoaded] = useState(false);
   const [canAnalyze, setCanAnalyze] = useState(false);
 
@@ -206,11 +207,19 @@ const timeframes =
   const analysisFinishedRef = useRef(false);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setUsageLoaded(true);
+      return;
+    }
+
     async function checkUsage() {
+      setUsageLoaded(false);
+      setUsageError(false);
       try {
         const response = await fetch("/api/usage");
 
-        if (!response.ok) return;
+        if (!response.ok) throw new Error("Usage request failed");
 
         const data = await response.json();
 
@@ -224,13 +233,14 @@ const timeframes =
           setRemainingSeconds(data.remainingSeconds || 0);
         }
       } catch {
+        setUsageError(true);
       } finally {
         setUsageLoaded(true);
       }
     }
 
     checkUsage();
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!loading) return;
@@ -253,7 +263,7 @@ const timeframes =
   }, [loading]);
 
   useEffect(() => {
-    if (canAnalyze || isPro) return;
+    if (!usageLoaded || usageError || !isSignedIn || canAnalyze || isPro) return;
 
     const interval = setInterval(() => {
       setRemainingSeconds((prev) => {
@@ -276,7 +286,7 @@ const timeframes =
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [canAnalyze, isPro, remainingHours, remainingMinutes]);
+  }, [usageLoaded, usageError, isSignedIn, canAnalyze, isPro, remainingHours, remainingMinutes]);
 
   function handleFileChange(key: TimeframeKey, file: File | null) {
     setFiles((prev) => ({
@@ -318,21 +328,22 @@ if (!isSignedIn) {
   return;
 }
     if (!canAnalyze && !isPro) {
-  window.location.href = "/pricing";
-  return;
-}
-
-    if (!canAnalyze && !isPro) {
       setShowUpgradeModal(true);
       return;
     }
 
-    const uploadedFiles = Object.entries(files).filter(
-      ([, file]) => file !== null
-    );
+    const uploadedFiles = timeframes.flatMap(({ key }) => {
+      const file = files[key];
+      return file ? [{ key, file }] : [];
+    });
 
     if (uploadedFiles.length < 2) {
       alert("Upload at least 2 timeframe charts before analyzing.");
+      return;
+    }
+
+    if (timeframes.reduce((total, { key }) => total + (files[key]?.size ?? 0), 0) > 4_000_000) {
+      alert("The selected images must be 4 MB or less in total.");
       return;
     }
 
@@ -346,10 +357,8 @@ if (!isSignedIn) {
     formData.append("instrument", instrument.trim());
     formData.append("tradeDuration", tradeDuration);
 
-    for (const [key, file] of uploadedFiles) {
-      if (file) {
-        formData.append(key, file);
-      }
+    for (const { key, file } of uploadedFiles) {
+      formData.append(key, file);
     }
 
     try {
@@ -416,7 +425,7 @@ if (response.status === 401) {
     });
   }
 
-  const uploadedCount = Object.values(files).filter(Boolean).length;
+  const uploadedCount = timeframes.filter(({ key }) => files[key]).length;
   const canClickAnalyze = uploadedCount >= 2 && !loading;
 
   if (loading) {
@@ -436,6 +445,7 @@ if (response.status === 401) {
   const sharedProps = {
   isSignedIn: Boolean(isSignedIn),
   usageLoaded,
+  usageError,
   isPro,
   canAnalyze,
   uploadedCount,

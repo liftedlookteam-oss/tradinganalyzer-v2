@@ -9,6 +9,8 @@ type HistoryViewProps = {
   filteredItems: HistoryItem[];
   totalAnalyses: number;
   loading: boolean;
+  loadError: string;
+  onRetry: () => void;
   search: string;
   filter: string;
   deleteTarget: HistoryItem | null;

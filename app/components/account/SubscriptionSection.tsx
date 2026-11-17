@@ -5,6 +5,7 @@ import SectionHeader from "./SectionHeader";
 
 type SubscriptionStatus = {
   isPro: boolean;
+  unlimitedAnalysis?: boolean;
   canAnalyze: boolean;
   remainingHours?: number;
   remainingMinutes?: number;
@@ -21,6 +22,10 @@ export default function SubscriptionSection({
   loadingPortal,
   openBillingPortal,
 }: SubscriptionSectionProps) {
+  const unlimited = status?.isPro || status?.unlimitedAnalysis;
+
+  if (!status) return <p role="status">Plan details are unavailable.</p>;
+
   return (
     <div>
       <SectionHeader
@@ -43,14 +48,14 @@ export default function SubscriptionSection({
           value={
             status?.isPro
               ? "Active"
-              : "Limited Access"
+              : unlimited ? "Unlimited Access" : "Limited Access"
           }
         />
 
         <InfoCard
           label="Usage"
           value={
-            status?.isPro
+            unlimited
               ? "Unlimited analyses"
               : status?.canAnalyze
               ? "1 free analysis available"
@@ -65,13 +70,13 @@ export default function SubscriptionSection({
 
       <div className="mt-6 rounded-3xl border border-zinc-800 bg-black p-7">
         <h3 className="text-3xl font-bold">
-          {status?.isPro
-            ? "Your Pro access is active."
+          {unlimited
+            ? "Unlimited analysis is active."
             : "Upgrade for unlimited analysis."}
         </h3>
 
         <p className="mt-4 max-w-2xl leading-8 text-zinc-400">
-          {status?.isPro
+          {unlimited
             ? "You currently have unrestricted access to AI-powered multi-timeframe trading analysis."
             : "Free access includes one AI analysis every 24 hours. Pro removes all analysis limits."}
         </p>
@@ -87,7 +92,7 @@ export default function SubscriptionSection({
                 ? "Opening..."
                 : "Manage Subscription"}
             </button>
-          ) : (
+          ) : !unlimited && (
             <a
               href="/pricing"
               className="inline-block rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200"

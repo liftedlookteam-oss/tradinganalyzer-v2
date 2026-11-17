@@ -75,7 +75,7 @@ export default function PricingPage() {
 
           <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 sm:text-base md:mt-6 md:text-lg md:leading-8">
             Free users get one analysis every 24 hours. Upgrade to Pro for
-            unlimited analyses and full history access.
+            unlimited analyses.
           </p>
         </section>
 
@@ -118,8 +118,7 @@ export default function PricingPage() {
             description="Flexible Pro access for traders who want unlimited analysis without committing monthly."
             features={[
               "Unlimited analyses",
-              "Full history access",
-              "Priority analysis processing",
+              "Saved analysis history",
             ]}
             buttonText="Choose Weekly"
             onClick={() => startCheckout("weekly")}
@@ -134,8 +133,7 @@ export default function PricingPage() {
             description="Best for active traders who review setups regularly and want a clean daily workflow."
             features={[
               "Unlimited analyses",
-              "Full history access",
-              "Priority analysis processing",
+              "Saved analysis history",
             ]}
             buttonText="Choose Monthly"
             onClick={() => startCheckout("monthly")}

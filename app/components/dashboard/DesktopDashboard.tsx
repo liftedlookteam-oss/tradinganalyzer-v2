@@ -13,6 +13,12 @@ export default function DesktopDashboard(props: DashboardViewProps) {
   return (
     <>
       <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6 md:py-10">
+        {props.loadError && (
+          <div role="alert" className="mx-auto max-w-7xl px-4 py-3 text-red-300">
+            {props.loadError} <button onClick={props.onRetry} className="underline">Retry</button>
+          </div>
+        )}
+
         <div className="mx-auto max-w-7xl">
           <DashboardHeader
             onOpenTrade={props.onOpenTradeModal}
@@ -63,6 +69,10 @@ export default function DesktopDashboard(props: DashboardViewProps) {
       </main>
 
       <TradeModal
+        editing={props.editingTrade}
+        date={props.tradeDate}
+        onDateChange={props.onTradeDateChange}
+        error={props.tradeError}
         open={props.showTradeModal}
         isSaving={props.isSavingTrade}
         asset={props.asset}
@@ -78,6 +88,7 @@ export default function DesktopDashboard(props: DashboardViewProps) {
       />
 
       <BalanceModal
+        error={props.balanceError}
         open={props.showBalanceModal}
         isSaving={props.isSavingBalance}
         balanceDraft={props.balanceDraft}
@@ -90,6 +101,13 @@ export default function DesktopDashboard(props: DashboardViewProps) {
       />
 
       <DayTradesModal
+        error={props.dayError}
+        deleting={props.deletingTrade}
+        onEdit={(trade) => {
+          props.onCloseDayTradesModal();
+          props.onEditTrade(trade);
+        }}
+        onDelete={props.onDeleteTrade}
         open={props.showDayTradesModal}
         selectedDay={props.selectedDay}
         selectedDayTrades={props.selectedDayTrades}

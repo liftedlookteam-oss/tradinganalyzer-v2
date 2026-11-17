@@ -10,6 +10,8 @@ type MobileHistoryProps = {
   filteredItems: HistoryItem[];
   totalAnalyses: number;
   loading: boolean;
+  loadError: string;
+  onRetry: () => void;
   search: string;
   filter: string;
   deleteTarget: HistoryItem | null;
@@ -25,6 +27,8 @@ export default function MobileHistory({
   filteredItems,
   totalAnalyses,
   loading,
+  loadError,
+  onRetry,
   search,
   filter,
   deleteTarget,
@@ -103,15 +107,20 @@ export default function MobileHistory({
       </div>
 
       <div className="mt-6 px-5">
-        {loading ? (
+        {loadError ? (
+          <div role="alert" className="space-y-3 rounded-2xl border border-zinc-800 p-5">
+            <p>{loadError}</p>
+            {loadError.startsWith("Sign in") ? <a href="/sign-in" className="underline">Sign in</a> : <button onClick={onRetry} className="underline">Retry</button>}
+          </div>
+        ) : loading ? (
           <EmptyState
             title="Loading..."
             text="Fetching analyses."
           />
         ) : filteredItems.length === 0 ? (
           <EmptyState
-            title="No analyses"
-            text="Run a new analysis to get started."
+            title={totalAnalyses === 0 ? "No saved analyses" : "No matching analyses"}
+            text={totalAnalyses === 0 ? "Run a new analysis to get started." : "Try a different search or filter."}
           />
         ) : (
           <div className="space-y-4">

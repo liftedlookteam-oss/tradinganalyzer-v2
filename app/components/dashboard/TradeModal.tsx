@@ -1,6 +1,10 @@
 "use client";
 
 type TradeModalProps = {
+  editing: boolean;
+  date: string;
+  onDateChange: (date: string) => void;
+  error: string;
   open: boolean;
   isSaving: boolean;
   asset: string;
@@ -16,6 +20,10 @@ type TradeModalProps = {
 };
 
 export default function TradeModal({
+  editing,
+  date,
+  onDateChange,
+  error,
   open,
   isSaving,
   asset,
@@ -35,7 +43,7 @@ export default function TradeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 text-white shadow-2xl">
         <h2 className="text-3xl font-bold">
-          Log Trade
+          {editing ? "Edit Trade" : "Log Trade"}
         </h2>
 
         <input
@@ -45,7 +53,13 @@ export default function TradeModal({
           className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-zinc-600"
         />
 
-        <select
+        <label className="mt-3 block text-sm">
+          Trade date
+          <input type="date" value={date} onChange={(event) => onDateChange(event.target.value)}
+            className="mt-1 block w-full rounded-xl border border-zinc-800 bg-black p-3" />
+        </label>
+
+        <select aria-label="Trade result"
           value={result}
           onChange={(e) =>
             onResultChange(
@@ -63,6 +77,10 @@ export default function TradeModal({
           value={amount}
           onChange={(e) => onAmountChange(e.target.value)}
           type="number"
+          aria-label="Trade amount"
+          min="0"
+          step="any"
+          disabled={result === "breakeven"}
           placeholder="Amount"
           className="mt-3 w-full rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-zinc-600"
         />
@@ -74,6 +92,7 @@ export default function TradeModal({
           className="mt-3 min-h-[100px] w-full resize-y rounded-2xl border border-zinc-800 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-zinc-600"
         />
 
+        {error && <p role="alert" className="mt-3 text-red-300">{error}</p>}
         <div className="mt-5 flex gap-3">
           <button
             type="button"

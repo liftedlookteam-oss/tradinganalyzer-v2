@@ -27,60 +27,59 @@ export async function GET() {
   return Response.json({ trades: data ?? [] });
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
+  return saveTrade(request, false);
+}
+
+export async function PATCH(request: Request) {
+  return saveTrade(request, true);
+}
+
+async function saveTrade(request: Request, editing: boolean) {
   const { userId } = await auth();
+  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!userId) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const body = await request.json().catch(() => null);
+  const asset = typeof body?.asset === "string" ? body.asset.trim().toUpperCase() : "";
+  const { id, result, amount, notes, trade_date } = body ?? {};
+  const validDate = typeof trade_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(trade_date) &&
+    !Number.isNaN(Date.parse(trade_date)) &&
+    new Date(trade_date).toISOString().slice(0, 10) === trade_date;
+
+  if (!asset || !validDate || !["win", "loss", "breakeven"].includes(result) ||
+      typeof amount !== "number" || !Number.isFinite(amount) ||
+      (result !== "breakeven" && amount === 0) ||
+      (editing && (typeof id !== "string" || !id))) {
+    return Response.json({ error: "Enter a valid asset, date, result and amount." }, { status: 400 });
   }
 
-  const body = await req.json();
-  const { asset, result, amount, notes, trade_date } = body;
-
-  if (!asset || !result || amount === undefined || !trade_date) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  const numericAmount = Number(amount);
-
-  const { error: tradeError } = await supabase.from("trades").insert({
-    user_id: userId,
+  const trade = {
     asset,
     result,
-    amount: numericAmount,
-    notes: notes || null,
+    amount: result === "loss" ? -Math.abs(amount) : result === "breakeven" ? 0 : Math.abs(amount),
+    notes: typeof notes === "string" ? notes.trim() || null : null,
     trade_date,
-  });
+  };
 
-  if (tradeError) {
-    return Response.json({ error: tradeError.message }, { status: 500 });
-  }
+  // The dashboard derives the balance from starting_balance and the trade ledger.
+  const query = editing
+    ? supabase.from("trades").update(trade).eq("user_id", userId).eq("id", id)
+    : supabase.from("trades").insert({ ...trade, user_id: userId });
+  const { data, error } = await query.select("*").maybeSingle();
 
-  const { data: account, error: accountFetchError } = await supabase
-    .from("trading_accounts")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
+  if (error) return Response.json({ error: "Could not save the trade." }, { status: 500 });
+  if (!data) return Response.json({ error: "Trade not found." }, { status: 404 });
+  return Response.json({ trade: data });
+}
 
-  if (accountFetchError) {
-    return Response.json({ error: accountFetchError.message }, { status: 500 });
-  }
+export async function DELETE(request: Request) {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (account) {
-    const nextBalance = Number(account.current_balance || 0) + numericAmount;
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) return Response.json({ error: "Trade ID is required." }, { status: 400 });
 
-    const { error: updateError } = await supabase
-      .from("trading_accounts")
-      .update({
-        current_balance: nextBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-
-    if (updateError) {
-      return Response.json({ error: updateError.message }, { status: 500 });
-    }
-  }
-
+  const { error } = await supabase.from("trades").delete().eq("user_id", userId).eq("id", id);
+  if (error) return Response.json({ error: "Could not delete the trade." }, { status: 500 });
   return Response.json({ success: true });
 }

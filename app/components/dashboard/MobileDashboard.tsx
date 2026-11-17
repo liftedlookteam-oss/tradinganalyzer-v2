@@ -12,6 +12,17 @@ export default function MobileDashboard(props: DashboardViewProps) {
   return (
     <>
       <main className="min-h-screen bg-[#050505] pb-10 text-white">
+        {props.loadError && (
+          <div role="alert" className="mx-auto max-w-7xl px-4 py-3 text-red-300">
+            {props.loadError} <button onClick={props.onRetry} className="underline">Retry</button>
+          </div>
+        )}
+        <nav className="flex gap-4 px-4 pt-4 text-sm">
+          <a href="/" className="underline">Analyzer</a>
+          <a href="/history" className="underline">History</a>
+          <a href="/account" className="underline">Account</a>
+        </nav>
+
         <div className="px-5 pt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
             Trading Dashboard
@@ -90,6 +101,10 @@ export default function MobileDashboard(props: DashboardViewProps) {
       </main>
 
       <TradeModal
+        editing={props.editingTrade}
+        date={props.tradeDate}
+        onDateChange={props.onTradeDateChange}
+        error={props.tradeError}
         open={props.showTradeModal}
         isSaving={props.isSavingTrade}
         asset={props.asset}
@@ -105,6 +120,7 @@ export default function MobileDashboard(props: DashboardViewProps) {
       />
 
       <BalanceModal
+        error={props.balanceError}
         open={props.showBalanceModal}
         isSaving={props.isSavingBalance}
         balanceDraft={props.balanceDraft}
@@ -117,6 +133,13 @@ export default function MobileDashboard(props: DashboardViewProps) {
       />
 
       <DayTradesModal
+        error={props.dayError}
+        deleting={props.deletingTrade}
+        onEdit={(trade) => {
+          props.onCloseDayTradesModal();
+          props.onEditTrade(trade);
+        }}
+        onDelete={props.onDeleteTrade}
         open={props.showDayTradesModal}
         selectedDay={props.selectedDay}
         selectedDayTrades={props.selectedDayTrades}

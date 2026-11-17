@@ -17,6 +17,7 @@ import AccountHeader from "../components/account/AccountHeader";
 
 type AccountStatus = {
   isPro: boolean;
+  unlimitedAnalysis?: boolean;
   canAnalyze: boolean;
   remainingHours?: number;
   remainingMinutes?: number;
@@ -107,7 +108,7 @@ export default function AccountPage() {
 
           <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4 md:p-8">
             {activeTab === "profile" && (
-  <ProfileSection email={email} />
+  <ProfileSection email={email} memberSince={user.createdAt?.toLocaleDateString(undefined, { dateStyle: "long" })} />
 )}
 
             {activeTab === "subscription" && (

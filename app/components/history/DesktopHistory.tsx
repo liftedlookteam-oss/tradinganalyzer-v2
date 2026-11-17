@@ -10,6 +10,8 @@ type DesktopHistoryProps = {
   filteredItems: HistoryItem[];
   totalAnalyses: number;
   loading: boolean;
+  loadError: string;
+  onRetry: () => void;
   search: string;
   filter: string;
   deleteTarget: HistoryItem | null;
@@ -25,6 +27,8 @@ export default function DesktopHistory({
   filteredItems,
   totalAnalyses,
   loading,
+  loadError,
+  onRetry,
   search,
   filter,
   deleteTarget,
@@ -111,15 +115,20 @@ export default function DesktopHistory({
           </div>
         </section>
 
-        {loading ? (
+        {loadError ? (
+          <div role="alert" className="space-y-3 rounded-2xl border border-zinc-800 p-5">
+            <p>{loadError}</p>
+            {loadError.startsWith("Sign in") ? <a href="/sign-in" className="underline">Sign in</a> : <button onClick={onRetry} className="underline">Retry</button>}
+          </div>
+        ) : loading ? (
           <EmptyState
             title="Loading history..."
             text="Fetching your saved analyses."
           />
         ) : filteredItems.length === 0 ? (
           <EmptyState
-            title="No analyses found"
-            text="Run a new analysis or adjust your search filters."
+            title={totalAnalyses === 0 ? "No saved analyses" : "No matching analyses"}
+            text={totalAnalyses === 0 ? "Run a new analysis to get started." : "Try a different search or filter."}
           />
         ) : (
           <section className="grid gap-5">

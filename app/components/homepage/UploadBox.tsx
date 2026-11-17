@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type UploadBoxProps = {
   title: string;
@@ -19,6 +19,9 @@ export default function UploadBox({
 }: UploadBoxProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  const input = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null);
@@ -32,7 +35,7 @@ export default function UploadBox({
   }, [file]);
 
   return (
-    <label
+    <div
       className={`flex cursor-pointer flex-col justify-between border-2 border-dashed border-zinc-700 bg-zinc-950 transition hover:border-white hover:bg-zinc-900 ${
         compact
           ? "min-h-[170px] rounded-2xl p-3"
@@ -40,10 +43,21 @@ export default function UploadBox({
       }`}
     >
       <input
+        ref={input}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp"
         className="hidden"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
+        onChange={(event) => {
+          const selected = event.target.files?.[0];
+          event.target.value = "";
+          if (!selected) return;
+          if (!["image/png", "image/jpeg", "image/webp"].includes(selected.type) || selected.size > 2_000_000) {
+            setError("Choose a PNG, JPEG or WebP image up to 2 MB.");
+            return;
+          }
+          setError("");
+          onChange(selected);
+        }}
       />
 
       <div>
@@ -84,7 +98,7 @@ export default function UploadBox({
         </p>
       </div>
 
-      <div
+      <button type="button" aria-label={`Choose ${title} image`} onClick={() => input.current?.click()}
         className={
           compact
             ? "mt-4 rounded-xl bg-black px-2 py-2 text-center text-[10px] text-zinc-500"
@@ -92,7 +106,10 @@ export default function UploadBox({
         }
       >
         {file ? "Replace image" : "Click to upload"}
-      </div>
-    </label>
+      </button>
+      {file && <button type="button" onClick={() => { setError(""); onChange(null); }} className="mt-2 text-sm underline">Remove image</button>}
+      <p className="mt-2 text-xs text-zinc-400">PNG, JPEG or WebP · 2 MB max</p>
+      {error && <p role="alert" className="mt-2 text-sm text-red-300">{error}</p>}
+    </div>
   );
 }

@@ -22,6 +22,7 @@ type TimeframeItem = {
 type DesktopHomepageProps = {
   isSignedIn: boolean;
   usageLoaded: boolean;
+  usageError: boolean;
   isPro: boolean;
   canAnalyze: boolean;
   uploadedCount: number;
@@ -81,6 +82,7 @@ const tradeDurations = [
 export default function DesktopHomepage({
   isSignedIn,
   usageLoaded,
+  usageError,
   isPro,
   canAnalyze,
   uploadedCount,
@@ -298,15 +300,15 @@ export default function DesktopHomepage({
         </section>
 
         <button
-          onClick={handleAnalyze}
-          disabled={(isPro || canAnalyze) && uploadedCount < 2}
+          onClick={usageError ? () => window.location.reload() : handleAnalyze}
+          disabled={!usageLoaded || (!usageError && isSignedIn && (isPro || canAnalyze) && uploadedCount < 2)}
           className={`mt-8 w-full rounded-2xl px-6 py-5 text-lg font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
             canAnalyze || isPro
               ? "bg-white text-black hover:bg-zinc-200"
               : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
           }`}
         >
-          {isPro || canAnalyze
+          {!usageLoaded ? "Checking access…" : usageError ? "Could not check access · Retry" : !isSignedIn ? "Sign in to analyze" : isPro || canAnalyze
             ? uploadedCount >= 2
               ? "Analyze Setup"
               : "Upload at least 2 timeframes to analyze"

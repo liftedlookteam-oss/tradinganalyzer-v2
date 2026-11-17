@@ -36,6 +36,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   const startingBalance = Number(body.starting_balance || 0);
   const currency = String(body.currency || "USD").toUpperCase();
+  if (!Number.isFinite(startingBalance) || !["USD", "EUR", "GBP"].includes(currency)) {
+    return Response.json({ error: "Enter a valid balance and currency." }, { status: 400 });
+  }
 
   const { error } = await supabase.from("trading_accounts").upsert(
     {

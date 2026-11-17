@@ -6,6 +6,7 @@ import type { HistoryItem } from "@/app/components/history/types";
 
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [deleteTarget, setDeleteTarget] =
@@ -16,13 +17,21 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState("All");
 
   async function loadHistory() {
+    setLoadError("");
+    setLoading(true);
     try {
       const response = await fetch("/api/history");
+      if (response.status === 401) {
+        setLoadError("Sign in to view your saved analyses.");
+        return;
+      }
+      if (!response.ok) throw new Error("History request failed");
       const data = await response.json();
 
       setItems(data.items || data.analyses || []);
     } catch (error) {
       console.error("Failed to load history", error);
+      setLoadError("Could not load your analyses. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -104,6 +113,8 @@ export default function HistoryPage() {
       filteredItems={filteredItems}
       totalAnalyses={items.length}
       loading={loading}
+      loadError={loadError}
+      onRetry={loadHistory}
       search={search}
       filter={filter}
       deleteTarget={deleteTarget}
