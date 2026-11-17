@@ -194,6 +194,7 @@ const timeframes =
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
+  const [unlimitedAnalysis, setUnlimitedAnalysis] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [usageLoaded, setUsageLoaded] = useState(false);
   const [canAnalyze, setCanAnalyze] = useState(false);
@@ -214,6 +215,7 @@ const timeframes =
         const data = await response.json();
 
         setIsPro(Boolean(data.isPro));
+        setUnlimitedAnalysis(Boolean(data.unlimitedAnalysis));
         setCanAnalyze(Boolean(data.canAnalyze));
 
         if (!data.canAnalyze) {
@@ -386,7 +388,7 @@ if (response.status === 401) {
         setLoading(false);
         setShowResults(true);
 
-        if (!isPro) {
+        if (!isPro && !unlimitedAnalysis) {
           setCanAnalyze(false);
           setRemainingHours(24);
           setRemainingMinutes(0);

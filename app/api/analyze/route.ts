@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { auth } from "@clerk/nextjs/server";
+import { hasUnlimitedAnalysis } from "@/lib/analysis-access";
 import { supabase } from "@/lib/supabase";
 
 const openai = new OpenAI({
@@ -138,7 +139,9 @@ export async function POST(request: Request) {
     const isPro =
       subscription?.status === "active";
 
-    if (!isPro) {
+    const unlimitedAnalysis = isPro || await hasUnlimitedAnalysis();
+
+    if (!unlimitedAnalysis) {
       const { data: usage } =
         await supabase
           .from("user_usage")
@@ -511,7 +514,7 @@ analysis.bearishScore = 100 - normalizedBullishScore;
       );
     }
 
-    if (!isPro) {
+    if (!unlimitedAnalysis) {
       await supabase
         .from("user_usage")
         .upsert({

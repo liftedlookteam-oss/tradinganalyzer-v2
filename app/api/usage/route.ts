@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { hasUnlimitedAnalysis } from "@/lib/analysis-access";
 import { supabase } from "@/lib/supabase";
 
 function getRemainingTime(lastUsed: string) {
@@ -49,10 +50,13 @@ export async function GET() {
 
     const isPro = subscription?.status === "active";
 
-    if (isPro) {
+    const unlimitedAnalysis = isPro || await hasUnlimitedAnalysis();
+
+    if (unlimitedAnalysis) {
       return Response.json({
         canAnalyze: true,
-        isPro: true,
+        isPro,
+        unlimitedAnalysis,
       });
     }
 
