@@ -1,3 +1,4 @@
+import { tradingCurrencies } from "@/lib/trading-currencies";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const startingBalance = Number(body.starting_balance || 0);
   const currency = String(body.currency || "USD").toUpperCase();
-  if (!Number.isFinite(startingBalance) || !["USD", "EUR", "GBP"].includes(currency)) {
+  if (!Number.isFinite(startingBalance) || !tradingCurrencies.includes(currency)) {
     return Response.json({ error: "Enter a valid balance and currency." }, { status: 400 });
   }
 

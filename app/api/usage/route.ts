@@ -2,31 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { hasUnlimitedAnalysis } from "@/lib/analysis-access";
 import { supabase } from "@/lib/supabase";
 
-function getRemainingTime(lastUsed: string) {
-  const last = new Date(lastUsed).getTime();
-  const now = Date.now();
-
-  const remaining = 24 * 60 * 60 * 1000 - (now - last);
-
-  if (remaining <= 0) {
-    return null;
-  }
-
-  const hours = Math.floor(remaining / (1000 * 60 * 60));
-  const minutes = Math.floor(
-    (remaining % (1000 * 60 * 60)) / (1000 * 60)
-  );
-const seconds = Math.floor(
-  (remaining % (1000 * 60)) / 1000
-);
-
-  return {
-    hours,
-    minutes,
-seconds,
-    totalMs: remaining,
-  };
-}
+import { freeAnalysisAvailableAt } from "@/lib/analysis-quota";
 
 export async function GET() {
   try {
@@ -42,54 +18,27 @@ export async function GET() {
       );
     }
 
-    const { data: subscription } = await supabase
+    const { data: subscription, error: subscriptionError } = await supabase
       .from("subscriptions")
-      .select("status")
+      .select("status, stripe_customer_id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    const isPro = subscription?.status === "active";
-
+    if (subscriptionError) throw subscriptionError;
+    const isPro = subscription?.status === "active" || subscription?.status === "trialing";
     const unlimitedAnalysis = isPro || await hasUnlimitedAnalysis();
-
-    if (unlimitedAnalysis) {
-      return Response.json({
-        canAnalyze: true,
-        isPro,
-        unlimitedAnalysis,
-      });
-    }
-
-    const { data: usage } = await supabase
-      .from("user_usage")
-      .select("last_free_analysis_at")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!usage?.last_free_analysis_at) {
-      return Response.json({
-        canAnalyze: true,
-        isPro: false,
-      });
-    }
-
-    const remaining = getRemainingTime(
-      usage.last_free_analysis_at
-    );
-
-    if (!remaining) {
-      return Response.json({
-        canAnalyze: true,
-        isPro: false,
-      });
-    }
+    const availableAt = unlimitedAnalysis ? 0 : await freeAnalysisAvailableAt(userId);
+    const remaining = Math.max(0, Math.ceil((availableAt - Date.now()) / 1000));
 
     return Response.json({
-      canAnalyze: false,
-      isPro: false,
-      remainingHours: remaining.hours,
-      remainingMinutes: remaining.minutes,
-remainingSeconds: remaining.seconds,
+      canAnalyze: remaining === 0,
+      isPro,
+      unlimitedAnalysis,
+      hasBilling: Boolean(subscription?.stripe_customer_id),
+      subscriptionStatus: subscription?.status ?? null,
+      availableAt,
+      remainingHours: Math.floor(remaining / 3600),
+      remainingMinutes: Math.floor(remaining / 60) % 60,
     });
   } catch (error) {
     return Response.json(

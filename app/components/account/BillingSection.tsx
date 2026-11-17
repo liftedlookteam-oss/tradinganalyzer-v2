@@ -5,6 +5,8 @@ import SectionHeader from "./SectionHeader";
 
 type BillingStatus = {
   isPro: boolean;
+  hasBilling: boolean;
+  subscriptionStatus: string | null;
 };
 
 type BillingSectionProps = {
@@ -28,7 +30,7 @@ export default function BillingSection({
       <div className="grid gap-5 md:grid-cols-2">
         <InfoCard
           label="Invoices"
-          value={status?.isPro ? "Available" : "No invoices"}
+          value={status?.hasBilling ? "View in billing portal" : "No billing account"}
         />
 
         <InfoCard
@@ -36,7 +38,7 @@ export default function BillingSection({
           value={
             status?.isPro
               ? "Active subscription"
-              : "No active subscription"
+              : status?.subscriptionStatus?.replaceAll("_", " ") ?? "No active subscription"
           }
         />
       </div>
@@ -54,7 +56,7 @@ export default function BillingSection({
 
         <button
           onClick={openBillingPortal}
-          disabled={!status?.isPro || loadingPortal}
+          disabled={!status?.hasBilling || loadingPortal}
           className="mt-6 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-40"
         >
           {loadingPortal

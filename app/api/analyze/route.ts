@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { auth } from "@clerk/nextjs/server";
 import { hasUnlimitedAnalysis } from "@/lib/analysis-access";
+import { FREE_ANALYSIS_INTERVAL_MS, freeAnalysisAvailableAt, releaseFreeAnalysis, reserveFreeAnalysis } from "@/lib/analysis-quota";
 import { supabase } from "@/lib/supabase";
 
 const openai = new OpenAI({
@@ -105,21 +106,9 @@ function cleanAnalysis(rawAnalysis: any) {
   };
 }
 
-function isWithinLast24Hours(
-  dateValue: string | null
-) {
-  if (!dateValue) return false;
-
-  const lastUsed = new Date(dateValue).getTime();
-  const now = Date.now();
-
-  return (
-    now - lastUsed <
-    24 * 60 * 60 * 1000
-  );
-}
-
 export async function POST(request: Request) {
+  let reservation: { userId: string; reservedAt: string } | undefined;
+
   try {
     const { userId } = await auth();
 
@@ -130,42 +119,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: subscription } =
+    const { data: subscription, error: subscriptionError } =
       await supabase
         .from("subscriptions")
         .select("status")
         .eq("user_id", userId)
         .maybeSingle();
 
+    if (subscriptionError) throw subscriptionError;
+
     const isPro =
-      subscription?.status === "active";
+      subscription?.status === "active" || subscription?.status === "trialing";
 
     const unlimitedAnalysis = isPro || await hasUnlimitedAnalysis();
-
-    if (!unlimitedAnalysis) {
-      const { data: usage } =
-        await supabase
-          .from("user_usage")
-          .select("last_free_analysis_at")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-      if (
-        usage &&
-        isWithinLast24Hours(
-          usage.last_free_analysis_at
-        )
-      ) {
-        return Response.json(
-          {
-            error:
-              "Free daily analysis already used.",
-            code: "FREE_LIMIT_REACHED",
-          },
-          { status: 402 }
-        );
-      }
-    }
 
     const formData =
       await request.formData();
@@ -228,6 +194,18 @@ export async function POST(request: Request) {
         },
         { status: 400 }
       );
+    }
+
+    if (!unlimitedAnalysis) {
+      const reservedAt = await reserveFreeAnalysis(userId);
+      if (!reservedAt) {
+        return Response.json({
+          error: "Free daily analysis already used.",
+          code: "FREE_LIMIT_REACHED",
+          availableAt: await freeAnalysisAvailableAt(userId),
+        }, { status: 402 });
+      }
+      reservation = { userId, reservedAt };
     }
 
     const content: any[] = [
@@ -524,18 +502,14 @@ analysis.bearishScore = 100 - normalizedBullishScore;
       );
     }
 
-    if (!unlimitedAnalysis) {
-      await supabase
-        .from("user_usage")
-        .upsert({
-          user_id: userId,
-          last_free_analysis_at:
-            new Date().toISOString(),
-        });
-    }
+    const availableAt = reservation
+      ? Date.parse(reservation.reservedAt) + FREE_ANALYSIS_INTERVAL_MS
+      : 0;
+    reservation = undefined;
 
     return Response.json({
       success: true,
+      availableAt,
       analysisId:
         insertedAnalysis?.id,
       analysis,
@@ -556,5 +530,11 @@ analysis.bearishScore = 100 - normalizedBullishScore;
       },
       { status: 500 }
     );
+  } finally {
+    if (reservation) {
+      await releaseFreeAnalysis(reservation.userId, reservation.reservedAt).catch((error) => {
+        console.error("Free analysis reservation cleanup failed", error);
+      });
+    }
   }
 }

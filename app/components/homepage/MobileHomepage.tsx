@@ -24,6 +24,8 @@ type MobileHomepageProps = {
   isSignedIn: boolean;
   usageLoaded: boolean;
   usageError: boolean;
+  loading: boolean;
+  loadingMessage: string;
   isPro: boolean;
   canAnalyze: boolean;
   uploadedCount: number;
@@ -86,6 +88,8 @@ export default function MobileHomepage({
   isSignedIn,
   usageLoaded,
   usageError,
+  loading,
+  loadingMessage,
   isPro,
   canAnalyze,
   uploadedCount,
@@ -350,19 +354,23 @@ export default function MobileHomepage({
 
           <button
             onClick={usageError ? () => window.location.reload() : handleAnalyze}
-            disabled={!usageLoaded || (!usageError && isSignedIn && (isPro || canAnalyze) && uploadedCount < 2)}
+            disabled={loading || !usageLoaded || (!usageError && (!isSignedIn || uploadedCount < 2 || !canAnalyze))}
             className={`mt-4 w-full rounded-2xl px-6 py-5 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40 ${
               canAnalyze || isPro
                 ? "bg-white text-black"
                 : "bg-zinc-800 text-zinc-400"
             }`}
           >
-            {!usageLoaded ? "Checking access…" : usageError ? "Could not check access · Retry" : !isSignedIn ? "Sign in to analyze" : isPro || canAnalyze
+            {!usageLoaded ? "Checking access…" : usageError ? "Could not check access · Retry" : !isSignedIn ? "Sign in to analyze" : loading && (canAnalyze || isPro) ? "Analyzing…" : isPro || canAnalyze
               ? uploadedCount >= 2
                 ? "Analyze Setup"
                 : "Upload at least 2 timeframes to analyze"
               : `Next free analysis in ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s`}
           </button>
+        {loading && <p role="status" className="mt-3 text-sm text-zinc-400">{loadingMessage}</p>}
+        {!loading && isSignedIn && usageLoaded && !usageError && !canAnalyze && (
+          <a href="/pricing" className="mt-3 inline-block text-sm underline">View Pro plans</a>
+        )}
 
 <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
   <p className="text-xs font-bold uppercase tracking-[0.28em] text-zinc-500">

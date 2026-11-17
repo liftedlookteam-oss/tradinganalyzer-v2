@@ -110,10 +110,10 @@ export default function TradingCalendar({
                     onOpenDayTrades(cell.date, dayTrades.length)
                   }
                   disabled={dayTrades.length === 0}
+                  aria-current={isToday ? "date" : undefined}
                   className={`min-h-[58px] min-w-0 overflow-hidden rounded-xl border p-1.5 text-left transition sm:min-h-[72px] sm:rounded-2xl sm:p-2 md:min-h-[92px] md:p-3 ${
-                    isToday
-                      ? "border-blue-400 ring-1 ring-blue-400/70"
-                      : getDayClass(dayTotal, dayTrades.length)
+                    getDayClass(dayTotal, dayTrades.length)
+                  } ${isToday ? "ring-2 ring-inset ring-blue-400" : ""
                   } ${!cell.inCurrentMonth ? "opacity-45" : ""} ${
                     dayTrades.length > 0
                       ? "cursor-pointer"

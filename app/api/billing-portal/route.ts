@@ -12,12 +12,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    const { data: subscription } = await supabase
+    const { data: subscription, error: subscriptionError } = await supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", userId)
       .maybeSingle();
 
+    if (subscriptionError) throw subscriptionError;
     if (!subscription?.stripe_customer_id) {
       return Response.json(
         { error: "No active billing customer found." },
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
 
     const portal = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${request.headers.get("origin")}/`,
+      return_url: new URL("/account", request.url).toString(),
     });
 
     return Response.json({

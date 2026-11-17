@@ -37,29 +37,29 @@ export async function POST(request: Request) {
         );
       }
 
-      await supabase.from("subscriptions").upsert({
+      if (session.mode !== "subscription" || typeof session.subscription !== "string" ||
+          typeof session.customer !== "string") {
+        return Response.json({ received: true });
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(session.subscription);
+      const { error: writeError } = await supabase.from("subscriptions").upsert({
         user_id: userId,
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: session.subscription as string,
-        status: "active",
+        stripe_customer_id: session.customer,
+        stripe_subscription_id: subscription.id,
+        status: subscription.status,
         price_id: session.metadata?.selected_plan || null,
         updated_at: new Date().toISOString(),
       });
 
+      if (writeError) throw writeError;
+
       const email = session.customer_details?.email;
-      const plan = session.metadata?.selected_plan || "Pro";
+      const plan = session.metadata?.selected_plan === "weekly" ? "Weekly" : "Monthly";
 
-      console.log("RESEND_EMAIL_DEBUG", {
-        email,
-        plan,
-        hasResendKey: Boolean(process.env.RESEND_API_KEY),
-      });
-
-      if (email) {
+      if (email && ["active", "trialing"].includes(subscription.status)) {
         try {
-          console.log("RESEND_SEND_ATTEMPT");
-
-          const emailResult = await resend.emails.send({
+          const { error: emailError } = await resend.emails.send({
             from: "ChartSetup Analyzer <noreply@send.chartsetup.app>",
             to: email,
             subject: "Your ChartSetup Pro subscription is active",
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
                 <h1>Your Pro subscription is active</h1>
                 <p>Thanks for upgrading to ChartSetup Pro.</p>
                 <p>Your selected plan: <strong>${plan}</strong></p>
-                <p>You now have access to unlimited AI chart analyses, full analysis history, and priority processing.</p>
+                <p>You now have access to unlimited AI chart analyses.</p>
                 <p>You can manage your subscription anytime from your account dashboard.</p>
                 <p style="color:#999999; margin-top:32px;">
                   ChartSetup Analyzer is decision-support only and does not provide financial advice.
@@ -77,44 +77,30 @@ export async function POST(request: Request) {
             `,
           });
 
-          console.log("RESEND_SEND_RESULT", emailResult);
+          if (emailError) console.error("Subscription confirmation email failed", emailError.message);
         } catch (emailError) {
           console.error("SUBSCRIPTION_EMAIL_ERROR:", emailError);
         }
       }
     }
 
-    if (event.type === "customer.subscription.deleted") {
-      const subscription = event.data.object as Stripe.Subscription;
+    if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.updated") {
+      const eventSubscription = event.data.object;
+      const status = event.type === "customer.subscription.deleted"
+        ? "canceled"
+        : (await stripe.subscriptions.retrieve(eventSubscription.id)).status;
 
-      await supabase
-        .from("subscriptions")
-        .update({
-          status: "canceled",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("stripe_subscription_id", subscription.id);
-    }
-
-    if (event.type === "customer.subscription.updated") {
-      const subscription = event.data.object as Stripe.Subscription;
-
-      await supabase
-        .from("subscriptions")
-        .update({
-          status: subscription.status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("stripe_subscription_id", subscription.id);
+      const { error } = await supabase.from("subscriptions")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("stripe_subscription_id", eventSubscription.id);
+      if (error) throw error;
     }
 
     return Response.json({ received: true });
   } catch (error) {
+    console.error("Stripe webhook failed", error);
     return Response.json(
-      {
-        error: "Webhook handling failed.",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Webhook handling failed." },
       { status: 500 }
     );
   }

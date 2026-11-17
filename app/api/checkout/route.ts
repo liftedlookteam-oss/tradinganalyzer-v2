@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import Stripe from "stripe";
+import { supabase } from "@/lib/supabase";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -31,6 +32,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: subscription, error } = await supabase.from("subscriptions")
+      .select("status, stripe_customer_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (subscription && ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"].includes(subscription.status)) {
+      return Response.json({ error: "Manage your existing subscription from Account → Billing." }, { status: 409 });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
 
@@ -43,13 +53,9 @@ export async function POST(request: Request) {
         },
       ],
 
-      success_url: `${request.headers.get(
-        "origin"
-      )}/?success=true`,
-
-      cancel_url: `${request.headers.get(
-        "origin"
-      )}/?canceled=true`,
+      customer: subscription?.stripe_customer_id || undefined,
+      success_url: new URL("/account?checkout=success", request.url).toString(),
+      cancel_url: new URL("/pricing", request.url).toString(),
 
       metadata: {
         clerk_user_id: userId,

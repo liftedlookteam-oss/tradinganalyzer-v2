@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import DashboardView from "@/app/components/dashboard/DashboardView";
 
+import { tradingCurrencies } from "@/lib/trading-currencies";
 import type { CalendarCell, Trade } from "@/app/components/dashboard/types";
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const currencies = ["USD", "EUR", "GBP"];
+
 
 export default function TradingDashboard() {
   const { isLoaded, isSignedIn } = useUser();
@@ -260,7 +261,7 @@ useEffect(() => {
     notes={notes}
     balanceDraft={balanceDraft}
     currencyDraft={currencyDraft}
-    currencies={currencies}
+    currencies={tradingCurrencies}
     onPreviousMonth={previousMonth}
     onNextMonth={nextMonth}
     onToday={() => setCurrentDate(new Date())}
@@ -346,23 +347,8 @@ function toDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function getCurrencySymbol(currency: string) {
-  switch (currency) {
-    case "EUR":
-      return "€";
-    case "GBP":
-      return "£";
-    default:
-      return "$";
-  }
-}
-
 function formatMoney(value: number, currency: string) {
-  const symbol = getCurrencySymbol(currency);
-  const abs = Math.abs(value).toFixed(2);
-
-  if (value < 0) return `-${symbol}${abs}`;
-  return `${symbol}${abs}`;
+  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
 }
 
 function getDayClass(total: number, count: number) {

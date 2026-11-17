@@ -17,6 +17,8 @@ import AccountHeader from "../components/account/AccountHeader";
 
 type AccountStatus = {
   isPro: boolean;
+  hasBilling: boolean;
+  subscriptionStatus: string | null;
   unlimitedAnalysis?: boolean;
   canAnalyze: boolean;
   remainingHours?: number;
@@ -32,24 +34,48 @@ export default function AccountPage() {
   const [status, setStatus] =
     useState<AccountStatus | null>(null);
 
+  const [checkoutPending, setCheckoutPending] = useState(false);
+
   const [loadingPortal, setLoadingPortal] =
     useState(false);
 
   useEffect(() => {
+    if (!isSignedIn) return;
+    const returnedFromCheckout = new URLSearchParams(window.location.search).get("checkout") === "success";
+    let stopped = false;
+    let retry: number | undefined;
+    let attempts = 0;
+
     async function loadStatus() {
       try {
-        const response = await fetch("/api/usage");
-        const data = await response.json();
-
-        if (response.ok) {
-          setStatus(data);
+        const response = await fetch("/api/usage", { cache: "no-store" });
+        if (!response.ok) throw new Error("Usage request failed");
+        const data: AccountStatus = await response.json();
+        if (stopped) return;
+        setStatus(data);
+        if (data.isPro) {
+          setCheckoutPending(false);
+          return;
         }
-      } catch {}
+      } catch {
+        if (stopped) return;
+        setStatus(null);
+      }
+      if (returnedFromCheckout && ++attempts < 15) {
+        retry = window.setTimeout(loadStatus, 2000);
+      }
     }
 
-    if (isSignedIn) {
-      loadStatus();
+    if (returnedFromCheckout) {
+      setActiveTab("subscription");
+      setCheckoutPending(true);
     }
+    void loadStatus();
+
+    return () => {
+      stopped = true;
+      window.clearTimeout(retry);
+    };
   }, [isSignedIn]);
 
   async function openBillingPortal() {
@@ -111,6 +137,11 @@ export default function AccountPage() {
   <ProfileSection email={email} memberSince={user.createdAt?.toLocaleDateString(undefined, { dateStyle: "long" })} />
 )}
 
+            {checkoutPending && (
+              <p role="status" className="mb-4 text-zinc-300">
+                Waiting for Stripe to confirm your subscription. If Pro does not appear shortly, refresh this page.
+              </p>
+            )}
             {activeTab === "subscription" && (
   <SubscriptionSection
     status={status}

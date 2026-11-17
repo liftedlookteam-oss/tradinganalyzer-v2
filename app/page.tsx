@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import LoadingView from "./components/homepage/LoadingView";
 import UpgradeModal from "./components/homepage/UpgradeModal";
 import ResultsView from "./components/homepage/ResultsView";
 import DesktopHomepage from "./components/homepage/DesktopHomepage";
@@ -200,9 +199,12 @@ const timeframes =
   const [usageLoaded, setUsageLoaded] = useState(false);
   const [canAnalyze, setCanAnalyze] = useState(false);
 
-  const [remainingHours, setRemainingHours] = useState(0);
-  const [remainingMinutes, setRemainingMinutes] = useState(0);
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [availableAt, setAvailableAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const remaining = Math.max(0, Math.ceil((availableAt - now) / 1000));
+  const remainingHours = Math.floor(remaining / 3600);
+  const remainingMinutes = Math.floor(remaining / 60) % 60;
+  const remainingSeconds = remaining % 60;
 
   const analysisFinishedRef = useRef(false);
 
@@ -227,11 +229,8 @@ const timeframes =
         setUnlimitedAnalysis(Boolean(data.unlimitedAnalysis));
         setCanAnalyze(Boolean(data.canAnalyze));
 
-        if (!data.canAnalyze) {
-          setRemainingHours(data.remainingHours || 0);
-          setRemainingMinutes(data.remainingMinutes || 0);
-          setRemainingSeconds(data.remainingSeconds || 0);
-        }
+        setNow(Date.now());
+        setAvailableAt(data.availableAt || 0);
       } catch {
         setUsageError(true);
       } finally {
@@ -263,36 +262,20 @@ const timeframes =
   }, [loading]);
 
   useEffect(() => {
-    if (!usageLoaded || usageError || !isSignedIn || canAnalyze || isPro) return;
-
-    const interval = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev > 0) return prev - 1;
-
-        if (remainingMinutes > 0) {
-          setRemainingMinutes((m) => m - 1);
-          return 59;
-        }
-
-        if (remainingHours > 0) {
-          setRemainingHours((h) => h - 1);
-          setRemainingMinutes(59);
-          return 59;
-        }
-
+    if (!availableAt) return;
+    const timer = window.setInterval(() => {
+      const currentTime = Date.now();
+      setNow(currentTime);
+      if (currentTime >= availableAt) {
         setCanAnalyze(true);
-        return 0;
-      });
+        setAvailableAt(0);
+      }
     }, 1000);
-
-    return () => clearInterval(interval);
-  }, [usageLoaded, usageError, isSignedIn, canAnalyze, isPro, remainingHours, remainingMinutes]);
+    return () => window.clearInterval(timer);
+  }, [availableAt]);
 
   function handleFileChange(key: TimeframeKey, file: File | null) {
-    setFiles((prev) => ({
-      ...prev,
-      [key]: file,
-    }));
+    setFiles((previous) => ({ ...previous, [key]: file }));
   }
 
   async function startCheckout(plan: "weekly" | "monthly") {
@@ -319,6 +302,7 @@ const timeframes =
   }
 
   async function handleAnalyze() {
+    if (loading) return;
 if (!isLoaded) {
   return;
 }
@@ -347,6 +331,12 @@ if (!isSignedIn) {
       return;
     }
 
+    if (!unlimitedAnalysis && !isPro) {
+      const startedAt = Date.now();
+      setNow(startedAt);
+      setAvailableAt(startedAt + 86_400_000);
+      setCanAnalyze(false);
+    }
     setLoading(true);
     setLoadingIndex(0);
     setAnalysis(null);
@@ -383,26 +373,25 @@ if (response.status === 401) {
 
         if (data.code === "FREE_LIMIT_REACHED") {
           setCanAnalyze(false);
+          setAvailableAt(data.availableAt || 0);
           setShowUpgradeModal(true);
           return;
         }
 
+        if (!unlimitedAnalysis && !isPro) {
+          setAvailableAt(0);
+          setCanAnalyze(true);
+        }
         alert(data.error || "Analysis failed.");
         return;
       }
 
+      setAvailableAt(data.availableAt || 0);
       setAnalysis(data.analysis);
 
       setTimeout(() => {
         setLoading(false);
         setShowResults(true);
-
-        if (!isPro && !unlimitedAnalysis) {
-          setCanAnalyze(false);
-          setRemainingHours(24);
-          setRemainingMinutes(0);
-          setRemainingSeconds(0);
-        }
 
         window.scrollTo({
           top: 0,
@@ -411,7 +400,11 @@ if (response.status === 401) {
       }, 1200);
     } catch {
       setLoading(false);
-      alert("Analysis failed.");
+      if (!unlimitedAnalysis && !isPro) {
+        setAvailableAt(0);
+        setCanAnalyze(true);
+      }
+      alert("Analysis failed. Check History before retrying.");
     }
   }
 
@@ -426,12 +419,6 @@ if (response.status === 401) {
   }
 
   const uploadedCount = timeframes.filter(({ key }) => files[key]).length;
-  const canClickAnalyze = uploadedCount >= 2 && !loading;
-
-  if (loading) {
-    return <LoadingView message={loadingMessages[loadingIndex]} />;
-  }
-
   if (showResults && analysis) {
   return (
     <ResultsView
@@ -446,6 +433,8 @@ if (response.status === 401) {
   isSignedIn: Boolean(isSignedIn),
   usageLoaded,
   usageError,
+  loading,
+  loadingMessage: loadingMessages[loadingIndex],
   isPro,
   canAnalyze,
   uploadedCount,
