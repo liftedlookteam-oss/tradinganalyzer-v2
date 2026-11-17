@@ -38,7 +38,7 @@ export default function UploadBox({
     <div
       className={`flex cursor-pointer flex-col justify-between border-2 border-dashed border-zinc-700 bg-zinc-950 transition hover:border-white hover:bg-zinc-900 ${
         compact
-          ? "min-h-[170px] rounded-2xl p-3"
+          ? "min-h-[190px] min-w-0 rounded-2xl p-3 [overflow-wrap:anywhere]"
           : "min-h-[260px] rounded-3xl p-5"
       }`}
     >
@@ -101,13 +101,13 @@ export default function UploadBox({
       <button type="button" aria-label={`Choose ${title} image`} onClick={() => input.current?.click()}
         className={
           compact
-            ? "mt-4 rounded-xl bg-black px-2 py-2 text-center text-[10px] text-zinc-500"
+            ? "mt-3 min-h-11 rounded-xl bg-black px-2 py-2 text-center text-xs text-zinc-500"
             : "mt-6 rounded-2xl bg-black px-4 py-3 text-sm text-zinc-500"
         }
       >
         {file ? "Replace image" : "Click to upload"}
       </button>
-      {file && <button type="button" onClick={() => { setError(""); onChange(null); }} className="mt-2 text-sm underline">Remove image</button>}
+      {file && <button type="button" onClick={() => { setError(""); onChange(null); }} className={compact ? "mt-2 min-h-11 text-sm underline" : "mt-2 text-sm underline"}>Remove image</button>}
       <p className="mt-2 text-xs text-zinc-400">PNG, JPEG or WebP · 2 MB max</p>
       {error && <p role="alert" className="mt-2 text-sm text-red-300">{error}</p>}
     </div>

@@ -11,24 +11,24 @@ import WeekSummaryList from "./WeekSummaryList";
 export default function MobileDashboard(props: DashboardViewProps) {
   return (
     <>
-      <main className="min-h-screen bg-[#050505] pb-10 text-white">
+      <main className="min-h-screen mx-auto min-w-0 bg-[#050505] pb-10 text-white">
         {props.loadError && (
           <div role="alert" className="mx-auto max-w-7xl px-4 py-3 text-red-300">
             {props.loadError} <button onClick={props.onRetry} className="underline">Retry</button>
           </div>
         )}
-        <nav className="flex gap-4 px-4 pt-4 text-sm">
-          <a href="/" className="underline">Analyzer</a>
-          <a href="/history" className="underline">History</a>
-          <a href="/account" className="underline">Account</a>
+        <nav className="grid grid-cols-3 gap-2 px-4 pt-4 text-sm">
+          <a href="/" className="rounded-xl border border-zinc-800 px-2 py-3 text-center">Analyzer</a>
+          <a href="/history" className="rounded-xl border border-zinc-800 px-2 py-3 text-center">History</a>
+          <a href="/account" className="rounded-xl border border-zinc-800 px-2 py-3 text-center">Account</a>
         </nav>
 
-        <div className="px-5 pt-8">
+        <div className="px-4 pt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
             Trading Dashboard
           </p>
 
-          <h1 className="mt-2 text-4xl font-bold leading-tight">
+          <h1 className="mt-2 text-3xl font-bold leading-tight">
             Track your trading performance
           </h1>
 
@@ -38,7 +38,7 @@ export default function MobileDashboard(props: DashboardViewProps) {
           </p>
         </div>
 
-        <div className="mt-6 px-5">
+        <div className="mt-6 px-4">
           <DashboardStats
             currentBalance={props.currentBalance}
             startingBalance={props.startingBalance}
@@ -53,10 +53,10 @@ export default function MobileDashboard(props: DashboardViewProps) {
           />
         </div>
 
-        <div className="mt-6 space-y-3 px-5">
+        <div className="mt-5 grid grid-cols-2 gap-2 px-4">
           <button
             onClick={props.onOpenTradeModal}
-            className="w-full rounded-2xl bg-white px-5 py-4 text-base font-bold text-black"
+            className="w-full rounded-2xl bg-white px-2 py-3 text-sm font-bold text-black"
           >
             + Log Trade
           </button>
@@ -67,13 +67,13 @@ export default function MobileDashboard(props: DashboardViewProps) {
               props.onCurrencyDraftChange(props.currency);
               props.onOpenBalanceModal();
             }}
-            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-base font-bold text-zinc-200"
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-sm font-bold text-zinc-200"
           >
             Set Balance
           </button>
         </div>
 
-        <div className="mt-8 px-5">
+        <div className="mt-6 px-3">
           <TradingCalendar
             today={props.today}
             currentDate={props.currentDate}
@@ -91,7 +91,7 @@ export default function MobileDashboard(props: DashboardViewProps) {
           />
         </div>
 
-        <div className="mt-6 px-5">
+        <div className="mt-6 px-4">
           <WeekSummaryList
             weekSummaries={props.weekSummaries}
             currency={props.currency}

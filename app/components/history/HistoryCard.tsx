@@ -22,7 +22,7 @@ export default function HistoryCard({
   const state = item.analysis?.marketState || "Unknown";
 
   return (
-    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-zinc-600 md:p-6">
+    <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-zinc-600 max-md:[overflow-wrap:anywhere] md:p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ export default function HistoryCard({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-3">
+        <div className="grid grid-cols-1 gap-2 max-md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-3">
           <a
             href={`/history/${item.id}`}
             className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-zinc-200 lg:py-2"

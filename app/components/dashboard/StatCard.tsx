@@ -12,12 +12,12 @@ export default function StatCard({
   subtext,
 }: StatCardProps) {
   return (
-    <div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6">
+    <div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 max-md:min-w-0 max-md:rounded-2xl max-md:p-3.5 max-md:[overflow-wrap:anywhere]">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">
         {label}
       </p>
 
-      <p className="mt-4 text-4xl font-bold">
+      <p className="mt-4 text-4xl font-bold max-md:mt-2 max-md:text-xl">
         {value}
       </p>
 

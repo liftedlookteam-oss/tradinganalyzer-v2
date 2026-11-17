@@ -8,13 +8,13 @@ export default function AccountHeader({
   email,
 }: AccountHeaderProps) {
   return (
-    <header className="mb-8 flex items-center justify-between">
+    <header className="mb-8 flex items-center justify-between max-md:mb-4 max-md:flex-wrap max-md:gap-3">
       <div>
         <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
           Account Center
         </p>
 
-        <h1 className="text-5xl font-bold tracking-tight">
+        <h1 className="text-5xl font-bold tracking-tight max-md:text-3xl">
           Manage Account
         </h1>
       </div>
@@ -27,7 +27,7 @@ export default function AccountHeader({
           Back to Analyzer
         </a>
 
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-sm font-bold text-white">
+        <div className="flex h-10 w-10 items-center max-md:shrink-0 justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-sm font-bold text-white">
           {email.slice(0, 1).toUpperCase()}
         </div>
       </div>

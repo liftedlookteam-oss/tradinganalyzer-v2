@@ -29,7 +29,7 @@ export default function MobileResults({
   onNewAnalysis,
 }: MobileResultsProps) {
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-4 text-white">
+    <main className="min-h-screen bg-[#050505] px-4 pb-8 pt-5 text-white [overflow-wrap:anywhere]">
       <div className="mx-auto w-full max-w-xl">
         <div className="mb-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
@@ -41,24 +41,24 @@ export default function MobileResults({
           </h1>
         </div>
 
-        <div className="mb-4 grid grid-cols-3 gap-2">
+        <div className="mb-4 grid grid-cols-[repeat(3,minmax(0,1fr))] gap-2">
           <a
             href="/history"
-            className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-3 text-center text-xs font-bold text-zinc-200"
+            className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 min-h-11 px-2 py-3 text-center text-sm font-bold text-zinc-200"
           >
             History
           </a>
 
           <a
             href="/dashboard"
-            className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-3 text-center text-xs font-bold text-zinc-200"
+            className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 min-h-11 px-2 py-3 text-center text-sm font-bold text-zinc-200"
           >
             Dashboard
           </a>
 
           <button
             onClick={onNewAnalysis}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-3 text-xs font-bold text-zinc-200"
+            className="rounded-xl border border-zinc-700 bg-zinc-950 min-h-11 px-2 py-3 text-sm font-bold text-zinc-200"
           >
             New Analysis
           </button>
@@ -235,7 +235,7 @@ function ScenarioPanel({
       </div>
 
       <div className="mt-3 rounded-xl bg-black/50 p-4">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-bold">
             Probability Score
           </p>

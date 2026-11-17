@@ -30,8 +30,8 @@ export default function DayTradesModal({
   if (!open || !selectedDay) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[2rem] border border-zinc-700 bg-zinc-950 p-6 text-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5 backdrop-blur-sm max-md:px-3 max-md:py-3">
+      <div className="w-full max-w-2xl rounded-[2rem] border border-zinc-700 bg-zinc-950 p-6 text-white shadow-2xl max-md:max-h-[calc(100dvh-1.5rem)] max-md:overflow-y-auto max-md:overscroll-contain max-md:p-4 max-md:[overflow-wrap:anywhere]">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-white">

@@ -12,14 +12,14 @@ export default function UpgradeModal({
   onMonthly,
 }: UpgradeModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-3xl overflow-hidden rounded-[2rem] border border-zinc-800 bg-[#070707] shadow-2xl">
-        <div className="border-b border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm max-md:px-3 max-md:py-3">
+      <div className="w-full max-w-3xl overflow-hidden rounded-[2rem] border border-zinc-800 bg-[#070707] shadow-2xl max-md:max-h-[calc(100dvh-1.5rem)] max-md:overflow-y-auto max-md:overscroll-contain">
+        <div className="border-b border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-8 max-md:p-4">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
             ChartSetup Pro
           </p>
 
-          <h2 className="text-4xl font-bold leading-tight">
+          <h2 className="text-4xl font-bold leading-tight max-md:text-2xl">
             <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
               Analyze without limits.
             </span>
@@ -31,7 +31,7 @@ export default function UpgradeModal({
           </p>
         </div>
 
-        <div className="grid gap-4 p-6 md:grid-cols-2">
+        <div className="grid gap-4 p-6 max-md:gap-3 max-md:p-4 md:grid-cols-2">
           <button
             onClick={onWeekly}
             className="rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200"
@@ -59,7 +59,7 @@ export default function UpgradeModal({
             onClick={onMonthly}
             className="relative rounded-3xl border border-white bg-white p-6 text-left text-black transition hover:bg-zinc-200"
           >
-            <div className="absolute right-5 top-5 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
+            <div className="absolute right-5 top-5 rounded-full max-md:static max-md:mb-2 max-md:w-fit bg-black px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
               Best Value
             </div>
 

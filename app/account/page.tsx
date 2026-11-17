@@ -132,7 +132,7 @@ export default function AccountPage() {
   onTabChange={setActiveTab}
 />
 
-          <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4 md:p-8">
+          <section className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4 max-md:min-w-0 max-md:[overflow-wrap:anywhere] md:p-8">
             {activeTab === "profile" && (
   <ProfileSection email={email} memberSince={user.createdAt?.toLocaleDateString(undefined, { dateStyle: "long" })} />
 )}

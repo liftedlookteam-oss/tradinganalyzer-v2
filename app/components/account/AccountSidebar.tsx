@@ -61,7 +61,7 @@ export default function AccountSidebar({
           Account
         </p>
 
-        <p className="mt-3 truncate text-sm font-bold text-white">
+        <p className="mt-3 text-sm font-bold text-white max-md:[overflow-wrap:anywhere] md:truncate">
           {email}
         </p>
 
@@ -76,12 +76,13 @@ export default function AccountSidebar({
         </div>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="space-y-2 max-md:grid max-md:grid-cols-2 max-md:gap-1.5 max-md:space-y-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`w-full rounded-2xl px-4 py-3 text-left transition md:px-5 md:py-4 ${
+            aria-current={activeTab === tab.id ? "true" : undefined}
+            className={`w-full rounded-2xl px-4 py-3 text-left transition max-md:min-w-0 max-md:px-2.5 md:px-5 md:py-4 ${
               activeTab === tab.id
                 ? "bg-white text-black"
                 : "text-zinc-400 hover:bg-black hover:text-white"
@@ -103,7 +104,7 @@ export default function AccountSidebar({
       </nav>
 
       <SignOutButton redirectUrl="/">
-        <button className="mt-8 w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20">
+        <button className="mt-8 w-full max-md:mt-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-left text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20">
           Sign Out
         </button>
       </SignOutButton>

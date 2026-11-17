@@ -126,11 +126,11 @@ export default function TradingCalendar({
 
                   {dayTrades.length > 0 && (
                     <div className="mt-1 min-w-0 sm:mt-2">
-                      <p className="truncate text-[9px] font-bold leading-tight sm:text-xs">
+                      <p className="truncate text-[9px] font-bold leading-tight max-md:whitespace-normal max-md:[overflow-wrap:anywhere] sm:text-xs">
                         {formatMoney(dayTotal, currency)}
                       </p>
 
-                      <p className="mt-0.5 hidden truncate text-[10px] text-zinc-300 sm:block">
+                      <p className="mt-0.5 truncate text-[10px] text-zinc-300 max-md:whitespace-normal max-md:[overflow-wrap:anywhere] sm:block">
                         {dayTrades.length}{" "}
                         {dayTrades.length === 1 ? "trade" : "trades"}
                       </p>

@@ -85,7 +85,7 @@ export default function HistoryDetailPage() {
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-8 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between max-md:flex-wrap max-md:gap-4">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-zinc-500">
               Saved Analysis
@@ -104,7 +104,7 @@ export default function HistoryDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-md:flex-wrap">
             <a
               href="/history"
               className="rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-white hover:text-white"
@@ -136,7 +136,7 @@ export default function HistoryDetailPage() {
           />
         </section>
 
-        <section className="mb-6 grid grid-cols-2 gap-3 md:gap-6">
+        <section className="mb-6 grid grid-cols-2 gap-3 max-md:grid-cols-1 md:gap-6">
           <ScenarioPanel
             type="bullish"
             title="Bullish Scenario"

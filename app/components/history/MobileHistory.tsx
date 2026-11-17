@@ -46,7 +46,7 @@ export default function MobileHistory({
           Saved Analyses
         </p>
 
-        <h1 className="mt-2 text-4xl font-bold leading-tight">
+        <h1 className="mt-2 text-3xl font-bold leading-tight">
           Analysis History
         </h1>
 
@@ -71,7 +71,7 @@ export default function MobileHistory({
         </a>
       </div>
 
-      <div className="mt-6 grid gap-3 px-5">
+      <div className="mt-6 grid grid-cols-2 gap-3 px-5">
         <SummaryCard
           label="Total"
           value={String(totalAnalyses)}
